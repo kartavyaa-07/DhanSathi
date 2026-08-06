@@ -16,7 +16,7 @@
 import { SCHEMES, INVESTMENTS } from '../data';
 
 const API_KEY_STORAGE = 'dhansathi_claude_api_key';
-const MODEL = 'claude-opus-5';
+const MODEL = 'claude-sonnet-5';
 
 export function getApiKey(): string {
   const envKey = import.meta.env.VITE_CLAUDE_API_KEY;

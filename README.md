@@ -12,7 +12,7 @@ npm run build     # type-checks + production bundle
 
 ## Set up Vaani (the voice agent)
 
-Vaani calls the real Anthropic Messages API (`claude-opus-5`) directly from the browser.
+Vaani calls the real Anthropic Messages API (`claude-sonnet-5`) directly from the browser.
 
 ```bash
 cp .env.example .env
