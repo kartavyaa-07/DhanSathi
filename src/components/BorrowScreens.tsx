@@ -16,7 +16,7 @@ export function BorrowScreen() {
             <div style={{ position: 'absolute', inset: 0, borderRadius: 9999, border: `4px solid ${C.greenLight}`, animation: 'ds-pulse 1.6s ease-out infinite' }} />
           )}
           <div style={{ width: 80, height: 80, borderRadius: 9999, background: C.greenLight, border: `4px solid ${C.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 26, color: C.greenDark }}>वा</span>
+            <img src="/assets/loan-icon.png" alt="Borrow" width={48} height={48} style={{ objectFit: 'contain' }} />
           </div>
         </div>
         <span style={{ fontFamily: devanagari, fontWeight: 600, fontSize: 18, color: C.ink }}>कितने रुपये चाहिए और कितने समय के लिए?</span>

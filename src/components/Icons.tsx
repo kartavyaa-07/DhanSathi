@@ -1,6 +1,11 @@
 // Inline SVG icon set, ported from the DhanSathi Claude Design source markup.
 import React from 'react';
 
+// Brand mark (₹ merged into a "D") — replaces the old green-square "ध" placeholder everywhere.
+export const Logo = ({ size = 32 }: { size?: number }) => (
+  <img src="/assets/logo.png" alt="DhanSathi" width={size} height={size} style={{ display: 'block', objectFit: 'contain' }} />
+);
+
 export const IconHome = ({ color = '#191B1E', size = 19 }: { color?: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path d="M4 11.5L12 4l8 7.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -88,6 +93,7 @@ export const IconClock = ({ color = '#76777D' }: { color?: string }) => (
     <path d="M10 2h4" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
   </svg>
 );
+
 export const IconSort = ({ color = '#76777D' }: { color?: string }) => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
     <path d="M2 5h14M5 9h8M7.5 13h3" stroke={color} strokeWidth="2" strokeLinecap="round" />

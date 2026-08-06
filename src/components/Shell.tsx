@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAppStore, type Screen } from '../store';
 import { C, jakarta, work } from '../ui';
-import { IconHome, IconShield, IconWallet, IconExchange, IconProfile, IconBack, IconMenu, IconMic } from './Icons';
+import { IconHome, IconShield, IconWallet, IconExchange, IconProfile, IconBack, IconMenu, IconMic, Logo } from './Icons';
 
 function useIsDesktop(): boolean {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 860);
@@ -53,7 +53,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <button onClick={actions.onOpenProfile} style={{ width: 40, height: 40, borderRadius: 9999, border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <IconMenu />
             </button>
-            <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 22, color: C.ink }}>DhanSathi</span>
+            <Logo size={30} />
             <button onClick={actions.onToggleLanguage} style={{ height: 32, padding: '0 12px', borderRadius: 9999, border: `1px solid ${C.borderStrong}`, background: '#fff', fontFamily: work, fontWeight: 600, fontSize: 13, color: C.green, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
               {s.lang === 'hi' ? 'हि | EN' : 'EN | हि'}
             </button>
@@ -115,9 +115,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {showSidebar && (
         <div style={{ width: 232, flexShrink: 0, height: '100%', background: C.sidebarBg, display: 'flex', flexDirection: 'column', padding: '24px 14px', gap: 6, boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 10px 26px 10px' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 16, color: C.greenLight }}>ध</span>
-            </div>
+            <Logo size={36} />
             <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 19, color: '#fff' }}>DhanSathi</span>
           </div>
           {sidebarNavItems.map(nt => {

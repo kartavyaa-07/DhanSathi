@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../store';
 import { C, jakarta, work, devanagari, primaryOrDisabled } from '../ui';
 import { INCOME_TYPES } from '../data';
-import { INCOME_ICONS, IconCheck, IconBack } from './Icons';
+import { INCOME_ICONS, IconCheck, IconBack, Logo } from './Icons';
 
 export function SplashScreen() {
   const { actions } = useAppStore();
@@ -15,9 +15,7 @@ export function SplashScreen() {
   }, []);
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: `linear-gradient(180deg,${C.bg} 0%,#E6EEE9 100%)`, opacity: visible ? 1 : 0, transition: 'opacity 0.6s ease' }}>
-      <div style={{ width: 88, height: 88, borderRadius: 24, background: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 36, color: C.greenLight }}>ध</span>
-      </div>
+      <Logo size={88} />
       <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 30, color: C.ink }}>DhanSathi</span>
       <span style={{ fontFamily: work, fontWeight: 500, fontSize: 15, color: C.inkSoft, textAlign: 'center' }}>Your money, made simple.</span>
     </div>
@@ -29,9 +27,7 @@ export function LangScreen() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', gap: 36, background: `linear-gradient(180deg,${C.bg} 0%,#E6EEE9 100%)` }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 88, height: 88, borderRadius: 24, background: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 36, color: C.greenLight }}>ध</span>
-        </div>
+        <Logo size={88} />
         <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 30, color: C.ink }}>DhanSathi</span>
         <span style={{ fontFamily: work, fontWeight: 500, fontSize: 15, color: C.inkSoft, textAlign: 'center' }}>Your financial companion, in your language.</span>
       </div>
@@ -51,9 +47,7 @@ export function PhoneAuthScreen() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '32px 24px 28px 24px', gap: 28, background: `linear-gradient(180deg,${C.greenBgSoft} 0%,${C.bg} 55%)` }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 8 }}>
-        <div style={{ width: 64, height: 64, borderRadius: 18, background: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 26, color: C.greenLight }}>ध</span>
-        </div>
+        <Logo size={64} />
         <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 24, color: C.ink }}>DhanSathi</span>
       </div>
       <div style={{ display: 'flex', borderRadius: 12, border: `1px solid ${C.borderStrong}`, overflow: 'hidden' }}>
