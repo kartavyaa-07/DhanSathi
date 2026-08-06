@@ -82,6 +82,17 @@ export function parseVaaniReply(raw: string): VaaniParsed {
 
 export class ClaudeApiError extends Error {}
 
+// 429 (rate limit) and 5xx (server error, including 529 "overloaded") are
+// transient — the Anthropic SDKs retry these automatically with backoff.
+// We're calling fetch() directly here, so we replicate that: up to 3
+// attempts, exponential backoff with jitter (matches the SDK's max_retries).
+const RETRYABLE_STATUSES = new Set([408, 409, 429, 500, 502, 503, 529]);
+const MAX_RETRIES = 3;
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /**
  * Sends the conversation to Claude and returns the raw text reply.
  * Throws ClaudeApiError with a user-facing message on failure.
@@ -89,38 +100,63 @@ export class ClaudeApiError extends Error {}
 export async function completeVaaniTurn(system: string, history: ChatTurn[]): Promise<string> {
   const apiKey = getApiKey();
   if (!apiKey) {
-    throw new ClaudeApiError('No Claude API key set. Add one in Profile settings.');
+    throw new ClaudeApiError('No Claude API key set. Add one to .env as VITE_CLAUDE_API_KEY.');
   }
-  let res: Response;
-  try {
-    res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 400,
-        system,
-        output_config: { effort: 'low' },
-        messages: history.map(h => ({ role: h.role, content: h.content })),
-      }),
-    });
-  } catch (e) {
-    throw new ClaudeApiError('Network error reaching Claude. Check your connection.');
+
+  let lastError: ClaudeApiError | null = null;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: 400,
+          system,
+          output_config: { effort: 'low' },
+          messages: history.map(h => ({ role: h.role, content: h.content })),
+        }),
+      });
+    } catch (e) {
+      // Network failure — retryable, same backoff as a 5xx.
+      lastError = new ClaudeApiError('Network error reaching Claude. Check your connection.');
+      if (attempt < MAX_RETRIES) { await sleep(backoffMs(attempt)); continue; }
+      throw lastError;
+    }
+
+    if (!res.ok) {
+      let detail = '';
+      try { detail = (await res.json())?.error?.message || ''; } catch {}
+      const err = new ClaudeApiError(`Claude API error (${res.status}): ${detail || res.statusText}`);
+      if (RETRYABLE_STATUSES.has(res.status) && attempt < MAX_RETRIES) {
+        lastError = err;
+        // Honor Retry-After if Anthropic sent one, otherwise exponential backoff.
+        const retryAfter = Number(res.headers.get('retry-after'));
+        await sleep(retryAfter > 0 ? retryAfter * 1000 : backoffMs(attempt));
+        continue;
+      }
+      throw err;
+    }
+
+    const data = await res.json();
+    if (data.stop_reason === 'refusal') {
+      throw new ClaudeApiError('Vaani declined to answer that. Please rephrase.');
+    }
+    const textBlock = (data.content || []).find((b: any) => b.type === 'text');
+    return textBlock?.text || '...';
   }
-  if (!res.ok) {
-    let detail = '';
-    try { detail = (await res.json())?.error?.message || ''; } catch {}
-    throw new ClaudeApiError(`Claude API error (${res.status}): ${detail || res.statusText}`);
-  }
-  const data = await res.json();
-  if (data.stop_reason === 'refusal') {
-    throw new ClaudeApiError('Vaani declined to answer that. Please rephrase.');
-  }
-  const textBlock = (data.content || []).find((b: any) => b.type === 'text');
-  return textBlock?.text || '...';
+
+  throw lastError ?? new ClaudeApiError('Claude API request failed after retries.');
+}
+
+function backoffMs(attempt: number): number {
+  const base = Math.min(1000 * 2 ** attempt, 8000);
+  return base + Math.random() * 300; // jitter, avoids retry stampedes
 }
