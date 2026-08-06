@@ -14,11 +14,15 @@ npm run build     # type-checks + production bundle
 
 Vaani calls the real Anthropic Messages API (`claude-opus-5`) directly from the browser.
 
-1. Open the app → **Profile** (hamburger menu, top-left) → **Claude API key**.
-2. Paste an API key from [console.anthropic.com](https://console.anthropic.com) and hit **Save**.
-3. Tap the mic FAB (bottom-right) or **Ask Vaani** (desktop sidebar) to start a session — Hindi voice in/out via the Web Speech API, falling back to text automatically if the browser has no mic support.
+```bash
+cp .env.example .env
+# then edit .env and set:
+VITE_CLAUDE_API_KEY=sk-ant-...   # from console.anthropic.com
+```
 
-The key is stored only in `localStorage` on your device — it is sent as a request header straight to `api.anthropic.com` and nowhere else.
+Restart `npm run dev` (Vite only reads `.env` at startup). Profile shows a read-only status (configured / not configured) rather than a key-entry field — the key lives in `.env` only. Tap the mic FAB (bottom-right) or **Ask Vaani** (desktop sidebar) to start a session — Hindi voice in/out via the Web Speech API, falling back to text automatically if the browser has no mic support.
+
+**⚠️ Security note — read before deploying:** this is a client-only app with no backend. `VITE_`-prefixed env vars are baked into the public JS bundle at build time, so whatever key you set here is visible in plaintext to anyone who opens dev tools on the deployed site (or just downloads the JS file — no login required). That's fine for local development. If you set `VITE_CLAUDE_API_KEY` on a production deploy (e.g. as a Vercel environment variable), every visitor to the site shares — and bills against — that one key, with no rate limiting per user. `.env` is gitignored specifically so a real key never ends up in git history. For a genuinely private production key, put the Anthropic call behind a server or serverless function instead of calling `api.anthropic.com` straight from the browser.
 
 ## What's real vs. simulated
 

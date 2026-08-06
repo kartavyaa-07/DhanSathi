@@ -1,20 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAppStore } from '../store';
 import { C, jakarta, work, cardStyle } from '../ui';
 import { IconWarning } from './Icons';
-import { getApiKey, setApiKey } from '../lib/claude';
+import { hasApiKey, apiKeyFromEnv } from '../lib/claude';
 
 export function ProfileScreen() {
   const { s, actions, derived } = useAppStore();
   const { t } = derived;
-  const [keyInput, setKeyInput] = useState(getApiKey());
-  const [saved, setSaved] = useState(false);
-
-  const handleSaveKey = () => {
-    setApiKey(keyInput);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
 
   const reportScamHref = 'https://wa.me/?text=' + encodeURIComponent('I want to report a suspected scam call claiming to be from DhanSathi.');
 
@@ -55,19 +47,17 @@ export function ProfileScreen() {
         </button>
       </div>
 
-      <div style={{ ...cardStyle, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ ...cardStyle, padding: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={{ fontFamily: work, fontWeight: 700, fontSize: 14, color: C.ink }}>{t.apiKeyLabel}</span>
-        <input
-          type="password"
-          value={keyInput}
-          onChange={e => setKeyInput(e.target.value)}
-          placeholder={t.apiKeyPlaceholder}
-          style={{ height: 48, borderRadius: 10, border: `2px solid ${C.borderStrong}`, padding: '0 14px', fontFamily: work, fontSize: 14, color: C.ink }}
-        />
-        <span style={{ fontFamily: work, fontSize: 12, color: C.inkFaint }}>{t.apiKeyHelp}</span>
-        <button onClick={handleSaveKey} style={{ height: 44, borderRadius: 10, border: 'none', background: C.green, color: '#fff', fontFamily: work, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-          {saved ? t.apiKeySaved + ' ✓' : 'Save key'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 9999, background: hasApiKey() ? C.green : C.borderStrong, display: 'inline-block', flexShrink: 0 }} />
+          <span style={{ fontFamily: work, fontWeight: 600, fontSize: 14, color: hasApiKey() ? C.green : C.inkFaint }}>
+            {hasApiKey() ? (apiKeyFromEnv() ? 'Configured via .env' : 'Configured (local override)') : 'Not configured'}
+          </span>
+        </div>
+        <span style={{ fontFamily: work, fontSize: 12, color: C.inkFaint }}>
+          Set VITE_CLAUDE_API_KEY in your .env file (see .env.example), then restart the dev server or redeploy.
+        </span>
       </div>
 
       <a href={reportScamHref} target="_blank" rel="noreferrer" style={{ fontFamily: work, fontWeight: 600, fontSize: 14, color: C.danger, display: 'inline-flex', alignItems: 'center', gap: 6 }}>

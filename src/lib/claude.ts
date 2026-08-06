@@ -1,6 +1,17 @@
 // Real Claude API integration for Vaani, the Hindi-first voice agent.
-// Calls the Anthropic Messages API directly from the browser using the user's
-// own API key (stored only in localStorage — never sent anywhere but api.anthropic.com).
+// Calls the Anthropic Messages API directly from the browser.
+//
+// Key resolution order:
+//   1. VITE_CLAUDE_API_KEY from .env (baked in at build time — see .env.example)
+//   2. A per-browser override saved to localStorage (set via setApiKey)
+//
+// ⚠️ This is a client-only app with no backend: whichever key resolves here
+// is visible in plaintext to anyone who opens dev tools on the deployed
+// site, or reads the built JS bundle directly. Option 1 is fine for local
+// development; shipping a real key via VITE_CLAUDE_API_KEY to a public
+// production deploy means every visitor shares — and bills against — that
+// one key. For a genuinely private production secret, proxy the Anthropic
+// call through a server/serverless function instead.
 
 import { SCHEMES, INVESTMENTS } from '../data';
 
@@ -8,7 +19,14 @@ const API_KEY_STORAGE = 'dhansathi_claude_api_key';
 const MODEL = 'claude-opus-5';
 
 export function getApiKey(): string {
+  const envKey = import.meta.env.VITE_CLAUDE_API_KEY;
+  if (envKey) return envKey.trim();
   return localStorage.getItem(API_KEY_STORAGE) || '';
+}
+
+/** True when the key came from .env (VITE_CLAUDE_API_KEY) rather than a saved local override. */
+export function apiKeyFromEnv(): boolean {
+  return !!import.meta.env.VITE_CLAUDE_API_KEY;
 }
 
 export function setApiKey(key: string) {
