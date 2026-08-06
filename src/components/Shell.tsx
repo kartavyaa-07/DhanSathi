@@ -17,7 +17,7 @@ const MAIN_HEADER_SCREENS: Screen[] = ['dashboard', 'insurance', 'investlist', '
 const SUB_HEADER_SCREENS: Screen[] = ['income', 'antiscam', 'aa', 'quiz', 'quizresult', 'insurancedetail', 'enrollsuccess', 'investdetail', 'borrowcompare', 'profile'];
 const BOTTOM_NAV_SCREENS: Screen[] = ['dashboard', 'insurance', 'investlist', 'borrow'];
 const FAB_SCREENS: Screen[] = ['dashboard', 'insurance', 'investlist'];
-const NO_SIDEBAR_SCREENS: Screen[] = ['lang', 'income', 'antiscam', 'aa', 'quiz', 'quizresult'];
+const NO_SIDEBAR_SCREENS: Screen[] = ['splash', 'lang', 'phoneauth', 'otp', 'profiledetails', 'income', 'antiscam', 'aa', 'quiz', 'quizresult'];
 
 function headerTitleFor(screen: Screen, t: any): string {
   const map: Partial<Record<Screen, string>> = {

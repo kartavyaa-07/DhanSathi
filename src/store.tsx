@@ -5,7 +5,8 @@ import { speak, stopSpeaking, listenOnce, type RecognitionHandle } from './lib/v
 import { downloadCertificatePdf } from './lib/pdf';
 
 export type Screen =
-  | 'lang' | 'income' | 'antiscam' | 'aa' | 'quiz' | 'quizresult' | 'dashboard'
+  | 'splash' | 'lang' | 'phoneauth' | 'otp' | 'profiledetails'
+  | 'income' | 'antiscam' | 'aa' | 'quiz' | 'quizresult' | 'dashboard'
   | 'insurance' | 'insurancedetail' | 'vaani' | 'enrollsuccess'
   | 'investlist' | 'investdetail' | 'borrow' | 'borrowcompare' | 'profile';
 
@@ -16,6 +17,13 @@ export interface VaaniRecommendation { summary: string; ctaLabel: string; action
 export interface AppState {
   screen: Screen;
   lang: 'en' | 'hi';
+  phoneNumber: string;
+  authTab: 'login' | 'signup';
+  otpDigits: string[];
+  otpResendSeconds: number;
+  profileDob: string;
+  profileGender: 'male' | 'female' | 'other' | null;
+  profileArea: string;
   incomeTypeId: string | null;
   aaStep: 'consent' | 'providers' | 'linking' | 'manual' | 'done';
   aaLinked: boolean;
@@ -58,7 +66,9 @@ export interface AppState {
 }
 
 const initialState: AppState = {
-  screen: 'lang', lang: 'en',
+  screen: 'splash', lang: 'en',
+  phoneNumber: '', authTab: 'login', otpDigits: ['', '', '', '', '', ''], otpResendSeconds: 45,
+  profileDob: '', profileGender: null, profileArea: '',
   incomeTypeId: null,
   aaStep: 'consent', aaLinked: false, manualIncome: '', monthlyIncome: 18200, monthlyExpenses: 6400,
   quizIndex: 0, riskScore: 0, riskTier: null,
@@ -75,11 +85,12 @@ const initialState: AppState = {
 };
 
 const BACK_MAP: Partial<Record<Screen, Screen>> = {
-  income: 'lang', antiscam: 'income', aa: 'antiscam', quiz: 'aa',
+  phoneauth: 'lang', otp: 'phoneauth', profiledetails: 'otp',
+  income: 'profiledetails', antiscam: 'income', aa: 'antiscam', quiz: 'aa',
   insurancedetail: 'insurance', investdetail: 'investlist', borrowcompare: 'borrow', profile: 'dashboard',
 };
 
-function enrollStepContent(schemeId: string | null, step: number, lang: 'en' | 'hi') {
+function enrollStepContent(schemeId: string | null, step: number) {
   const sc = SCHEMES.find(s => s.id === schemeId);
   const steps = [
     { hi: `चलिए ${sc?.nameHi || sc?.nameEn} शुरू करते हैं। आप देंगे ${sc?.premiumEn}, और मिलेगा ${sc?.coverEn}। कोई लॉक-इन नहीं है।`, en: `Let's start your ${sc?.nameEn}. You pay ${sc?.premiumEn}, you get ${sc?.coverEn}. There is no lock-in.` },
@@ -87,8 +98,10 @@ function enrollStepContent(schemeId: string | null, step: number, lang: 'en' | '
     { hi: `भुगतान आपके जुड़े हुए बैंक खाते से होगा।`, en: `The payment will go from your linked bank account.` },
     { hi: `बहुत बढ़िया! मैं आपका आवेदन जमा कर रही हूं...`, en: `Great! Submitting your enrollment now...` },
   ];
-  const s = steps[step] || steps[0];
-  return lang === 'hi' ? s : s; // both langs always shown together in UI
+  // Vaani chat is intentionally bilingual-always — kept out of the onboarding
+  // strict-single-language rule. `lang` param retained for callers that want
+  // to pick a single string for voice playback (see speak() call sites).
+  return steps[step] || steps[0];
 }
 
 function actionLabel(action: string): string {
@@ -99,10 +112,10 @@ function actionLabel(action: string): string {
   return labels[action] || 'Continue';
 }
 
-function riskDescription(tier: string | null): string {
-  if (tier === 'Conservative') return "We'll only show you liquid options you can withdraw anytime, with no lock-in.";
-  if (tier === 'Moderate') return "We'll show liquid and short-term options — nothing locked beyond a few days.";
-  return "You're comfortable with some lock-in for better returns — we'll include short-term options too.";
+function riskDescription(tier: string | null, t: typeof EN): string {
+  if (tier === 'Conservative') return t.riskConservativeDesc;
+  if (tier === 'Moderate') return t.riskModerateDesc;
+  return t.riskGrowthDesc;
 }
 
 export function useAppStoreImpl() {
@@ -116,13 +129,55 @@ export function useAppStoreImpl() {
   }, []);
 
   // ---- navigation ----
-  const onChooseLang = (l: 'en' | 'hi') => patch({ lang: l, screen: 'income' });
+  const onSplashDone = () => patch({ screen: 'lang' });
+  const onChooseLang = (l: 'en' | 'hi') => patch({ lang: l, screen: 'phoneauth' });
   const onToggleLanguage = () => patch(p => ({ lang: p.lang === 'hi' ? 'en' : 'hi' }));
   const onOpenProfile = () => patch({ screen: 'profile' });
   const onBack = () => { const b = BACK_MAP[s.screen]; if (b) patch({ screen: b }); };
   const onOpenTab = (tab: string) => {
     const map: Record<string, Screen> = { dashboard: 'dashboard', bima: 'insurance', insurance: 'insurance', bachat: 'investlist', invest: 'investlist', udhaar: 'borrow', borrow: 'borrow' };
     patch({ screen: map[tab] || 'dashboard' });
+  };
+
+  // ---- phone / OTP auth ----
+  const otpTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startOtpCountdown = () => {
+    if (otpTimerRef.current) clearInterval(otpTimerRef.current);
+    otpTimerRef.current = setInterval(() => {
+      patch(prev => {
+        if (prev.otpResendSeconds <= 1) {
+          if (otpTimerRef.current) clearInterval(otpTimerRef.current);
+          return { otpResendSeconds: 0 };
+        }
+        return { otpResendSeconds: prev.otpResendSeconds - 1 };
+      });
+    }, 1000);
+  };
+  const onChangePhone = (v: string) => patch({ phoneNumber: v.replace(/\D/g, '').slice(0, 10) });
+  const onChangeAuthTab = (tab: 'login' | 'signup') => patch({ authTab: tab });
+  const onRequestOtp = () => {
+    if (s.phoneNumber.length !== 10) return;
+    patch({ screen: 'otp', otpDigits: ['', '', '', '', '', ''], otpResendSeconds: 45 });
+    startOtpCountdown();
+  };
+  const onOtpDigitChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
+    patch(prev => {
+      const next = [...prev.otpDigits];
+      next[index] = digit;
+      return { otpDigits: next };
+    });
+  };
+  const onResendOtp = () => { patch({ otpResendSeconds: 45 }); startOtpCountdown(); };
+  const onVerifyOtp = () => { if (s.otpDigits.every(d => d.length === 1)) patch({ screen: 'profiledetails' }); };
+
+  // ---- personal details ----
+  const onChangeProfileName = (v: string) => patch({ profileName: v });
+  const onChangeProfileDob = (v: string) => patch({ profileDob: v });
+  const onChangeProfileGender = (g: 'male' | 'female' | 'other') => patch({ profileGender: g });
+  const onChangeProfileArea = (v: string) => patch({ profileArea: v });
+  const onSubmitProfileDetails = () => {
+    if (s.profileName.trim() && s.profileDob && s.profileGender && s.profileArea.trim()) patch({ screen: 'income' });
   };
 
   // ---- onboarding ----
@@ -165,7 +220,7 @@ export function useAppStoreImpl() {
 
   const onEnrollWithVaani = (schemeId: string) => {
     patch(p => ({ vaaniOpen: true, vaaniMode: 'enroll', enrollSchemeId: schemeId, enrollStep: 0, screen: 'vaani', vaaniReturnScreen: p.screen }));
-    speak(enrollStepContent(schemeId, 0, s.lang).hi, 'hi');
+    speak(enrollStepContent(schemeId, 0)[s.lang], s.lang);
   };
   const onEnrollSelectedScheme = () => { if (s.selectedSchemeId) onEnrollWithVaani(s.selectedSchemeId); };
 
@@ -174,10 +229,10 @@ export function useAppStoreImpl() {
     if (enrollStep < 2) {
       const next = enrollStep + 1;
       patch({ enrollStep: next });
-      speak(enrollStepContent(enrollSchemeId, next, s.lang).hi, 'hi');
+      speak(enrollStepContent(enrollSchemeId, next)[s.lang], s.lang);
     } else {
       patch({ enrollStep: 3 });
-      speak(enrollStepContent(enrollSchemeId, 3, s.lang).hi, 'hi');
+      speak(enrollStepContent(enrollSchemeId, 3)[s.lang], s.lang);
       setTimeout(() => {
         const sc = SCHEMES.find(x => x.id === enrollSchemeId);
         if (!sc) return;
@@ -358,9 +413,13 @@ export function useAppStoreImpl() {
     dashboardSchemes: SCHEMES.filter(x => !s.enrolledSchemes.includes(x.id)).slice(0, 2),
     enrolledSchemesList: SCHEMES.filter(x => s.enrolledSchemes.includes(x.id)),
     insuranceSchemesList: SCHEMES.filter(x => !s.enrolledSchemes.includes(x.id)),
-    selectedIncomeTypeLabel: (INCOME_TYPES.find(x => x.id === s.incomeTypeId) || {}).label || '—',
-    riskTierDescription: riskDescription(s.riskTier),
-    enrollStepContent: enrollStepContent(s.enrollSchemeId, s.enrollStep, s.lang),
+    selectedIncomeTypeLabel: (() => {
+      const it = INCOME_TYPES.find(x => x.id === s.incomeTypeId);
+      if (!it) return '—';
+      return s.lang === 'hi' ? it.labelHi : it.label;
+    })(),
+    riskTierDescription: riskDescription(s.riskTier, t),
+    enrollStepContent: enrollStepContent(s.enrollSchemeId, s.enrollStep),
     moneylenderInterest, mudraInterest, borrowSavings: moneylenderInterest - mudraInterest,
     projected1Month: investAmt * (1 + parseFloat(selectedProduct.returnPct) / 100 / 12),
     projected1Year: investAmt * (1 + parseFloat(selectedProduct.returnPct) / 100),
@@ -372,7 +431,9 @@ export function useAppStoreImpl() {
   return {
     s, patch, derived,
     actions: {
-      onChooseLang, onToggleLanguage, onOpenProfile, onBack, onOpenTab,
+      onSplashDone, onChooseLang, onToggleLanguage, onOpenProfile, onBack, onOpenTab,
+      onChangePhone, onChangeAuthTab, onRequestOtp, onOtpDigitChange, onResendOtp, onVerifyOtp,
+      onChangeProfileName, onChangeProfileDob, onChangeProfileGender, onChangeProfileArea, onSubmitProfileDetails,
       onSelectIncomeType, onContinueIncome, onConfirmAntiscam,
       onStartAALink, onSkipToManual, onSelectProvider, onManualIncomeChange, onSubmitManual,
       onAnswerQuiz, onContinueToDashboard, onRetakeQuiz,

@@ -129,6 +129,13 @@ export const IconFreelance = () => (
   </svg>
 );
 
+export const IconOther = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="9" stroke="#191B1E" strokeWidth="1.8" />
+    <path d="M8 9h8M8 13h8M8 17h5" stroke="#191B1E" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
 export const INCOME_ICONS: Record<string, React.FC> = {
-  delivery: IconDelivery, domestic: IconDomestic, office: IconOffice, business: IconBusiness, freelance: IconFreelance,
+  delivery: IconDelivery, domestic: IconDomestic, office: IconOffice, business: IconBusiness, freelance: IconFreelance, other: IconOther,
 };

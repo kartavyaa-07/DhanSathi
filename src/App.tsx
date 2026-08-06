@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppStoreProvider, useAppStore, type Screen } from './store';
 import { Shell } from './components/Shell';
-import { LangScreen, IncomeScreen, AntiscamScreen, AAScreen, QuizScreen, QuizResultScreen } from './components/OnboardingScreens';
+import { SplashScreen, LangScreen, PhoneAuthScreen, OtpScreen, ProfileDetailsScreen, IncomeScreen, AntiscamScreen, AAScreen, QuizScreen, QuizResultScreen } from './components/OnboardingScreens';
 import { DashboardScreen } from './components/DashboardScreen';
 import { InsuranceListScreen, InsuranceDetailScreen, EnrollSuccessScreen } from './components/InsuranceScreens';
 import { VaaniScreen } from './components/VaaniScreen';
@@ -10,7 +10,11 @@ import { BorrowScreen, BorrowCompareScreen } from './components/BorrowScreens';
 import { ProfileScreen } from './components/ProfileScreen';
 
 const SCREEN_COMPONENTS: Record<Screen, React.FC> = {
+  splash: SplashScreen,
   lang: LangScreen,
+  phoneauth: PhoneAuthScreen,
+  otp: OtpScreen,
+  profiledetails: ProfileDetailsScreen,
   income: IncomeScreen,
   antiscam: AntiscamScreen,
   aa: AAScreen,

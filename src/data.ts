@@ -50,14 +50,15 @@ export const INVEST_CATEGORIES = [
   { key: 'shortterm', label: 'Short-Term' },
 ];
 
-export interface IncomeType { id: string; label: string; labelHi: string }
+export interface IncomeType { id: string; label: string; labelHi: string; sublabel: string; sublabelHi: string }
 
 export const INCOME_TYPES: IncomeType[] = [
-  { id: 'delivery', label: 'Delivery partner', labelHi: 'डिलीवरी पार्टनर' },
-  { id: 'domestic', label: 'Domestic work', labelHi: 'घरेलू काम' },
-  { id: 'office', label: 'Office job', labelHi: 'ऑफिस जॉब' },
-  { id: 'business', label: 'My business', labelHi: 'मेरा बिज़नेस' },
-  { id: 'freelance', label: 'Freelance & contract', labelHi: 'फ्रीलांस और कॉन्ट्रैक्ट' },
+  { id: 'office', label: 'Salaried / Office employee', labelHi: 'वेतनभोगी / ऑफिस कर्मचारी', sublabel: 'Company job, fixed monthly salary', sublabelHi: 'कंपनी की नौकरी, तय मासिक वेतन' },
+  { id: 'business', label: 'Micro-entrepreneur', labelHi: 'सूक्ष्म उद्यमी', sublabel: 'Shop, stall, or small business owner', sublabelHi: 'दुकान, स्टॉल, या छोटा व्यवसाय' },
+  { id: 'delivery', label: 'Field & Delivery employee', labelHi: 'फील्ड और डिलीवरी कर्मचारी', sublabel: 'Auto, cab, or delivery partner', sublabelHi: 'ऑटो, कैब, या डिलीवरी पार्टनर' },
+  { id: 'domestic', label: 'House and Care Work', labelHi: 'घर और देखभाल का काम', sublabel: 'Domestic help, caregiving, cooking', sublabelHi: 'घरेलू सहायता, देखभाल, खाना बनाना' },
+  { id: 'freelance', label: 'Freelancing & Gigs', labelHi: 'फ्रीलांसिंग और गिग वर्क', sublabel: 'Project-based or contract work', sublabelHi: 'प्रोजेक्ट या कॉन्ट्रैक्ट आधारित काम' },
+  { id: 'other', label: 'Others', labelHi: 'अन्य', sublabel: 'Something else not listed here', sublabelHi: 'यहां सूचीबद्ध कुछ और' },
 ];
 
 export const PROVIDERS = ['State Bank of India', 'HDFC Bank', 'ICICI Bank', 'Other Bank'];
@@ -120,12 +121,27 @@ export const EN = {
   govtScheme: 'Govt. scheme', youSave: 'You save', applyMudra: 'Apply for PM Mudra on Jan Samarth',
   riskProfileLabel: 'Risk profile', retake: 'Retake quiz', aaStatusLabel: 'Bank account link', revoke: 'Revoke', language: 'Language', reportScam: 'Report a scam call',
   apiKeyLabel: 'Claude API key', apiKeySaved: 'Saved', apiKeyPlaceholder: 'sk-ant-...', apiKeyHelp: 'Stored only in this browser. Needed for Vaani to respond.',
+
+  splashTagline: 'Your money, made simple.',
+  antiscamBody: 'DhanSathi will never call or message you asking for an OTP, password, or bank details. If anyone claims to be from DhanSathi and asks for these, it is a scam.',
+  aaConsentBody: 'DhanSathi will read your last 6 months of bank transaction history, used only to understand your income and expenses. You can revoke this consent anytime from Settings — data deletes within 24 hours. This is via RBI-regulated Account Aggregator, not screen-sharing.',
+  logIn: 'Log In', signUp: 'Sign Up', mobileNumber: 'Mobile Number', enterMobileNumber: 'Enter 10 digit number', getOtp: 'Get OTP',
+  secureAndTrusted: '100% Secure & Trusted', agreeToTerms: "By continuing, you agree to DhanSathi's Terms.", help: 'Help',
+  verifyPhone: 'Verify Phone', enterOtpSent: 'Enter the code sent to your phone.', didntReceiveCode: "Didn't receive code?", resendIn: 'Resend in', verifyAndProceed: 'Verify & Proceed',
+  personalDetailsTitle: 'Personal Details', personalDetailsSubtitle: 'Tell us about yourself to tailor your DhanSathi experience.', step: 'Step', of: 'of', profileSetup: 'Profile Setup',
+  fullName: 'Full Name', dateOfBirth: 'Date of Birth', gender: 'Gender', male: 'Male', female: 'Female', other: 'Other', residentialArea: 'Residential Area', selectYourArea: 'Select your area',
+  needHelp: 'Need Help?', tapVaaniToSpeak: 'Tap the Vaani icon below to speak your details',
+  occupationTitle: 'What best describes your work?', occupationSubtitle: 'This helps us find schemes you qualify for.',
+  riskDoneHeadline: "You're all set!", riskDoneSubtext: "You're one step closer to a stronger financial future.",
+  riskConservativeDesc: "You're conservative — we'll only show you liquid options you can withdraw anytime, with no lock-in.",
+  riskModerateDesc: "You're moderate — we'll show liquid and short-term options, nothing locked beyond a few days.",
+  riskGrowthDesc: "You're growth-oriented — you're comfortable with some lock-in for better returns, so we'll include short-term options too.",
 };
 
 export const HI: typeof EN = Object.assign({}, EN, {
   continue: 'आगे बढ़ें', incomeTitle: 'आपका काम किस तरह का है?', incomeSubtitle: 'इससे हमें आपके लिए सही योजनाएं ढूंढने में मदद मिलेगी।',
   antiscamTitle: 'शुरू करने से पहले, एक वादा।', iUnderstand: 'मैं समझ गया/गई',
-  aaTitle: 'अपना बैंक खाता जोड़ें', linkBank: 'बैंक खाता जोड़ें', enterManually: 'इसके बजाय आय खुद बताएं',
+  aaTitle: 'अपना बैंक खाता जोड़ें', aaScopeLabel: 'हम क्या एक्सेस करते हैं', linkBank: 'बैंक खाता जोड़ें', enterManually: 'इसके बजाय आय खुद बताएं',
   chooseBank: 'अपना बैंक चुनें', linking: 'आपका खाता सुरक्षित रूप से जोड़ा जा रहा है…',
   manualIncomeTitle: 'आपकी लगभग मासिक आय क्या है?', manualIncomePlaceholder: 'जैसे 15000',
   yourRiskProfile: 'आपकी जोखिम प्रोफ़ाइल', goToDashboard: 'डैशबोर्ड पर जाएं',
@@ -139,6 +155,20 @@ export const HI: typeof EN = Object.assign({}, EN, {
   confirmInvest: 'निवेश की पुष्टि करें', investmentConfirmed: 'निवेश की पुष्टि हो गई!',
   borrowingQuestion: 'आपको कितनी राशि चाहिए, और कितने समय के लिए?', seeMyOptions: 'मेरे विकल्प देखें', skipShowOptions: 'छोड़ें — लोन विकल्प दिखाएं',
   applyMudra: 'जन समर्थ पर PM Mudra के लिए आवेदन करें',
+
+  antiscamBody: 'DhanSathi कभी OTP, पासवर्ड, या बैंक डिटेल्स फोन या मैसेज पर नहीं मांगेगा। अगर कोई DhanSathi के नाम से मांगे, वह फ्रॉड है।',
+  aaConsentBody: 'DhanSathi आपके बैंक खाते के पिछले 6 महीने का लेन-देन इतिहास पढ़ेगा। इसका इस्तेमाल सिर्फ आपकी आय समझने के लिए होगा। आप कभी भी सहमति वापस ले सकते हैं। डेटा 24 घंटे में डिलीट हो जाता है। यह RBI-नियंत्रित अकाउंट एग्रीगेटर के माध्यम से है, स्क्रीन-शेयरिंग नहीं।',
+  logIn: 'लॉग इन', signUp: 'साइन अप', mobileNumber: 'मोबाइल नंबर', enterMobileNumber: '10 अंकों का नंबर दर्ज करें', getOtp: 'ओटीपी प्राप्त करें',
+  secureAndTrusted: '100% सुरक्षित और भरोसेमंद', agreeToTerms: 'जारी रखने पर, आप DhanSathi की शर्तों से सहमत होते हैं।', help: 'मदद',
+  verifyPhone: 'फोन सत्यापित करें', enterOtpSent: 'अपने फोन पर भेजा गया कोड दर्ज करें।', didntReceiveCode: 'कोड नहीं मिला?', resendIn: 'में फिर से भेजें', verifyAndProceed: 'सत्यापित करें और आगे बढ़ें',
+  personalDetailsTitle: 'व्यक्तिगत विवरण', personalDetailsSubtitle: 'आपके अनुभव को बेहतर बनाने के लिए अपने बारे में बताएं।', step: 'चरण', of: 'में से', profileSetup: 'प्रोफाइल सेटअप',
+  fullName: 'पूरा नाम', dateOfBirth: 'जन्म तिथि', gender: 'लिंग', male: 'पुरुष', female: 'महिला', other: 'अन्य', residentialArea: 'रिहायशी इलाका', selectYourArea: 'अपना इलाका चुनें',
+  needHelp: 'मदद चाहिए?', tapVaaniToSpeak: 'अपनी जानकारी बोलने के लिए वाणी आइकन पर टैप करें',
+  occupationTitle: 'आपका काम किस तरह का है?', occupationSubtitle: 'इससे हमें आपके लिए सही योजनाएं ढूंढने में मदद मिलेगी।',
+  riskDoneHeadline: 'आप तैयार हैं!', riskDoneSubtext: 'आप एक मजबूत वित्तीय भविष्य की ओर एक कदम और करीब हैं।',
+  riskConservativeDesc: 'आप सतर्क निवेशक हैं — हम आपको सिर्फ ऐसे विकल्प दिखाएंगे जिन्हें आप कभी भी बिना लॉक-इन के निकाल सकते हैं।',
+  riskModerateDesc: 'आप संतुलित निवेशक हैं — हम आपको लिक्विड और शॉर्ट-टर्म विकल्प दिखाएंगे, कुछ ही दिनों के लॉक-इन के साथ।',
+  riskGrowthDesc: 'आप विकास-उन्मुख निवेशक हैं — आप बेहतर रिटर्न के लिए कुछ लॉक-इन सहज हैं, इसलिए हम शॉर्ट-टर्म विकल्प भी शामिल करेंगे।',
 });
 
 export function fmt(n: number): string {
