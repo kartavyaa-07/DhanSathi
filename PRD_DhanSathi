@@ -1,0 +1,894 @@
+<aside>
+
+## 0. TL;DR (Decision Snapshot)
+
+</aside>
+
+**Who is impacted:**
+India’s 300+ million informal, gig, and first-time earners in Delhi NCR who are financially active but excluded by language, documentation complexity, and distrust of formal financial products.
+
+**Problem:**
+No financial product today serves users with variable income, no employer documentation, and a deep distrust of schemes — in their language, at their literacy level, with their employment reality as the baseline.
+
+**Why now:**
+65% of gig workers have no insurance (Borzo 2024). 90% lack any savings (NITI Aayog 2024). 30 crore are registered on eShram but have never received a single benefit. The Account Aggregator framework now exists to solve the onboarding problem. Sarvam AI makes Hindi voice AI viable. The infrastructure window is open; the competitive window is not yet closed.
+
+**Solution:**
+DhanSathi is an AI-powered financial companion — a three-tab product (Insurance, Investment, Borrowing) with a Hindi voice agent (Vaani), an Account Aggregator-backed tracker, and a scheme enrollment engine that handles documentation. First session to first enrollment: under 15 minutes.
+
+**Expected impact:**
+10,000 active Delhi users in 6 months post-launch. Session 1 enrollment completion at 40%+. Day-30 retention at 25%+. LTV:CAC ratio of 2.0 at 10% monthly churn (Month 12 target).
+
+---
+
+<aside>
+
+## 1. Problem and Impact
+
+</aside>
+
+### 1.1 Primary Users
+
+| Persona | Description | Primary pain |
+| --- | --- | --- |
+| Truptimayee (Segment 1) | First-time formal earner, 6 months in job, fixed low salary | Information fragmentation — hears about schemes from reels, never gets complete details |
+| Priyanka (Segment 2) | Micro-entrepreneur, seasonal income, Excel-literate | Documentation burden — knows schemes exist, blocked by paperwork |
+| Suresh (Segment 3) | Contract IT professional, 25 years experience, variable income | Trust and misinformation — believes all schemes lock money |
+| Raju and Sunita (Segment 4, V2) | Rural-to-urban gig and domestic workers | Language and awareness — schemes are entirely inaccessible in Hindi |
+
+### 1.2 Business Impact
+
+- Freemium → Rs. 49–99/month subscription with 10% conversion target at Day-90
+- B2G commission on scheme enrollments (Phase 2 revenue stream)
+- WTP validated: Rs. 50–100/month confirmed independently by 2 of 3 research interviews
+- Estimated CAC: Rs. 80/user via B2B2C; LTV at 10% churn: Rs. 160 blended
+
+### 1.3 Problem Magnitude
+
+| Metric | Value | Source |
+| --- | --- | --- |
+| Gig workers with no insurance | 65% | Borzo Survey 2024 |
+| Gig workers who lack savings | 90% | NITI Aayog 2024 |
+| eShram registrations with zero benefits availed | 30.4 crore | PIB 2024 |
+| Estimated monthly emergency credit at 5–10% interest per month | Raju paid 10%/month; Sunita paid 5%/month | Primary interview, Phase 2 |
+| WTP for a working solution | Rs. 50–100/month | Interviews 1 and 3, Phase 2 |
+
+---
+
+<aside>
+
+## 2. Solution Overview
+
+</aside>
+
+DhanSathi is a React Native Android app with three core tabs (Insurance, Investment, Borrowing), an AI voice agent (Vaani), and an Account Aggregator-backed financial tracker. The architecture is outlined in Section A5 of the Phase 2 submission. The PRD covers all MVP-scope features from Must Have and selected Should Have tiers.
+
+**Product principles:**
+- Hindi-first, one-action-per-screen, no English jargon without explanation
+- Liquid options first in every financial recommendation — no lock-in without explicit user intent
+- Source transparency — every scheme recommendation links to the official government portal
+- Anti-scam declaration visible before any data request
+- No lock-in for DhanSathi itself — cancel anytime, no penalty
+
+---
+
+<aside>
+
+## 3. EPIC 1 — Onboarding, Profile, and Financial Intelligence
+
+</aside>
+
+**Epic description:** Every user’s DhanSathi journey begins here. This epic covers how users enter the product, how their financial profile is built without manual form-filling, and how the dashboard gives them a continuous picture of their financial position.
+
+**Business value:** The entire personalization engine depends on this epic. A user who does not complete onboarding cannot receive any scheme recommendation, investment suggestion, or Vaani session. This epic is the gate to all product value.
+
+**Success metrics:**
+
+| Metric | Target |
+| --- | --- |
+| Onboarding completion rate (income type selected through dashboard reached) | 70%+ |
+| Account Aggregator consent given | 40%+ of onboarding completions |
+| Risk profile completion rate | 80%+ of onboarding completions |
+| Median time to reach dashboard from first open | Under 4 minutes |
+
+---
+
+### US-01 — Income and Transaction Detection
+
+**Story:** As a user, I want the app to detect my income and transactions from my history, so that I get personalized guidance without filling out a long form.
+
+**Story Points:** 8 · **Priority:** P0 (Must Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-01-01 | System should present income type selection (Delivery partner, Domestic work, Office job, My business, Freelance and contract) as the first screen after language selection |
+| FR-01-02 | User should be able to link their bank account via Account Aggregator (RBI-regulated) with explicit consent screen shown before any data access |
+| FR-01-03 | Consent screen must display in Hindi and English: exact data scope (“DhanSathi will read your last 6 months of transaction history”), purpose, and revocation rights |
+| FR-01-04 | System should ingest transaction data via Account Aggregator API and derive: estimated monthly income, income pattern (fixed or variable), major expense categories, approximate savings buffer |
+| FR-01-05 | If Account Aggregator consent is declined, system should proceed with manual income input (single field: “What is your approximate monthly income?”) as a fallback |
+| FR-01-06 | User should be able to edit their income type and manual income at any time from profile settings |
+| FR-01-07 | Derived financial profile should update automatically whenever a new Account Aggregator data refresh is triggered (minimum monthly cadence) |
+
+**Non-Functional Requirements:**
+
+| ID | NFR |
+| --- | --- |
+| NFR-01-01 | Account Aggregator data fetch should complete in under 5 seconds on a 4G connection |
+| NFR-01-02 | No raw Aadhaar or bank credentials are stored by DhanSathi at any point; AA tokens are stored encrypted |
+| NFR-01-03 | AA consent revocation should propagate within 24 hours and trigger data deletion |
+
+**Acceptance Criteria (Story-Level — US-01):**
+
+- [ ]  User can complete onboarding from income type selection to dashboard in under 4 minutes without manual income entry when AA consent is given
+- [ ]  AA-derived income and expense summary appears on the dashboard within 5 seconds of consent confirmation on a 4G connection
+- [ ]  If AA consent is declined, the manual income fallback is presented without error and onboarding continues normally to the dashboard
+
+**Modules:**
+
+**M1.1 — Income Type Selection Module**
+Screen presenting 5 income type options as selectable cards (not a form dropdown). Selected income type is stored in user profile and is used as the primary filter for scheme eligibility. User flow: App open → Language selection → Income type selection → [Continue].
+
+**Figma wireframe:** Screen S2 — Income Type Selection
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**M1.2 — Account Aggregator Integration Module**
+Handles AA consent flow, token storage, data ingestion, and refresh cadence. Integrates with Anumati/Finvu/OneMoney AA providers. Derives income pattern and expense summary from raw transaction data. User flow: [Link your bank] → Consent screen (Hindi/English, full scope shown) → Bank selection → AA authentication via provider → Transaction data ingested → Profile built → Dashboard shown.
+
+**Figma wireframe:** Screen S3 — Bank Connect
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+---
+
+### US-02 — Risk Profile Assessment
+
+**Story:** As a user, I want to complete a 2-minute risk profile so that investment, insurance, and borrowing suggestions are matched to how much risk my income situation can actually absorb.
+
+**Story Points:** 3 · **Priority:** P0 (Must Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-02-01 | System should present exactly 5 questions, each with 2–3 answer options, completing in under 2 minutes |
+| FR-02-02 | Questions must derive: income stability tolerance, emergency buffer adequacy, family dependents, existing financial products, lock-in tolerance |
+| FR-02-03 | System should output one of three risk tiers: Conservative, Moderate, or Growth-oriented |
+| FR-02-04 | Risk tier should be stored in user profile and used to filter Investment tab content |
+| FR-02-05 | User should be able to retake the risk assessment from profile settings at any time |
+| FR-02-06 | Conservative tier must never surface lock-in investment products (lock-in period greater than 7 days) |
+
+**Modules:**
+
+**M1.3 — Risk Profile Assessment Module**
+5-question conversational UI (not a survey form). Each answer is a tappable card. Progress shown (Question 2 of 5). Risk tier derived using a rules-based scoring model (not ML at MVP). User flow: [Quick 5-question profile] → Q1 income variability → Q2 family size → Q3 emergency buffer → Q4 existing products → Q5 what matters most → Risk tier output → Store in profile → Redirect to Dashboard.
+
+**Figma wireframe:** Screen S4 — Quick Profile
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**Acceptance Criteria (Story-Level — US-02):**
+
+- [ ]  All 5 risk profile questions are presented and answerable in under 2 minutes on a mid-range Android device (3GB RAM)
+- [ ]  Risk tier is correctly assigned, stored in the user profile, and persists unchanged across sessions until the user retakes the assessment
+- [ ]  Conservative tier never surfaces any investment product with a lock-in period greater than 7 days — verified against all test profiles
+
+---
+
+### US-06 — Single Dashboard
+
+**Story:** As a user, I want a single dashboard showing my income, expenses, and savings in one place, so that I have one view of my financial position instead of piecing it together myself.
+
+**Story Points:** 5 · **Priority:** P1 (Should Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-06-01 | Dashboard should display: current month income, current month expenses, and estimated savings buffer as a summary card |
+| FR-06-02 | Dashboard should display three quick-action buttons: Insurance, Invest, Borrow |
+| FR-06-03 | Dashboard should show the last 5 transactions from AA data |
+| FR-06-04 | If AA is not linked, dashboard should show profile-estimated values with a soft prompt to link for accuracy |
+| FR-06-05 | Dashboard data should refresh every time the user opens the app (pull-to-refresh also available) |
+
+**Modules:**
+
+**M1.4 — Financial Dashboard Module**
+Single scrollable home screen. Summary card (income/expenses/savings) sourced from AA data. Transaction list (last 5, no categorization at MVP). Quick action row (Insurance, Invest, Borrow) routes to the respective tab. User flow: Onboarding complete → Dashboard → [Insurance / Invest / Borrow] → Respective tab.
+
+**Figma wireframe:** Screen S5 — Dashboard (Hub)
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**Acceptance Criteria (Story-Level — US-06):**
+
+- [ ]  Dashboard displays current month income, expenses, and savings summary sourced from AA data or manual estimate for every active user
+- [ ]  Dashboard loads within 1 second using cached data when AA is unavailable, with a visible "Last updated [timestamp]" label
+- [ ]  All three quick-action buttons (Insurance, Invest, Borrow) route to the correct tab without error on first tap
+
+---
+
+### UX Requirements — EPIC 1
+
+**Key screens:** S1 Splash, S2 Income Type Selection, S3 Bank Connect, S4 Quick Profile, S5 Dashboard
+
+**Mobile considerations:**
+
+- All screens must be navigable with one-handed thumb reach on a standard Android form factor
+- Income type selection options must be tappable cards (minimum 48dp height) — not a form dropdown
+- Account Aggregator consent text must meet WCAG AA contrast ratio (4.5:1 minimum) for outdoor readability — delivery partners use phones in bright daylight
+- Quick-action row on the dashboard must be visible without scrolling on any screen taller than 5.5 inches
+
+**Figma wireframe reference (all onboarding screens, S1–S5):** DhanSathi User Flow Wireframes
+
+---
+
+<aside>
+
+## 4. EPIC 2 — Scheme Eligibility and Discovery Engine
+
+</aside>
+
+**Epic description:** The core intelligence layer of DhanSathi. This epic handles matching the user’s financial profile against government scheme eligibility criteria, presenting schemes with full transparency, enabling comparison, and alerting users when new schemes become relevant.
+
+**Business value:** Scheme enrollment is the first verifiable value event for the user. It is also the primary trust-building moment and the anchor that drives retention. Every enrolled user has a tangible reason to return (renewal, next scheme, certificate).
+
+**Success metrics:**
+
+| Metric | Target |
+| --- | --- |
+| Scheme eligibility engine accuracy (correct eligibility determination against official criteria) | 95%+ |
+| Scheme card click-through rate from discovery list | 60%+ |
+| T&C screen read rate (user scrolled to bottom) | 50%+ |
+| Push notification open rate for new scheme alerts | 20%+ |
+
+---
+
+### US-03 — Government Scheme Eligibility Display
+
+**Story:** As a user, I want to see which government schemes I already qualify for, so that I know what protection or benefits I’m currently missing.
+
+**Story Points:** 13 · **Priority:** P0 (Must Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-03-01 | System should match user profile (income, employment type, age, family size, existing schemes, risk tier) against eligibility criteria for a minimum of 15 government schemes at MVP launch |
+| FR-03-02 | Scheme list should show only schemes the user qualifies for, with ineligible schemes suppressed |
+| FR-03-03 | Each scheme card should display: scheme name in Hindi and English, cost (annual premium or zero), benefit in plain language (e.g., “Rs. 2 lakh accident cover”), enrollment time estimate |
+| FR-03-04 | Scheme eligibility criteria must be sourced only from MyScheme API (NIC) or equivalent official government data source; no manually curated eligibility rules |
+| FR-03-05 | System should surface the lowest-cost, highest-coverage scheme first within each category (Insurance, Loan, Health) |
+| FR-03-06 | Scheme data must refresh at minimum weekly from the official source |
+
+**Non-Functional Requirements:**
+
+| ID | NFR |
+| --- | --- |
+| NFR-03-01 | Scheme eligibility matching should complete in under 2 seconds for a given user profile |
+| NFR-03-02 | Scheme data must be versioned; old eligibility rules should be preserved for enrolled users |
+
+**Acceptance Criteria (Story-Level — US-03):**
+
+- [ ]  System returns only schemes the user qualifies for based on their profile — zero ineligible schemes appear in the list for any test profile
+- [ ]  Scheme list renders within 2 seconds for any user profile on a 4G connection
+- [ ]  All scheme eligibility criteria are sourced from MyScheme API (NIC) or an equivalent official government data source — no manually authored eligibility rules in production code
+
+**Modules:**
+
+**M2.1 — Scheme Eligibility Engine Module**
+Rules-based matching engine. Input: user profile object (income, income_type, age, family_size, existing_schemes, location, risk_tier). Output: ranked list of eligible scheme objects with enrollment status. Integrates with MyScheme API (NIC) for live eligibility criteria. Falls back to cached criteria if API is unavailable. User flow: User opens Insurance or Borrowing tab → Profile loaded → Eligibility engine runs → Eligible scheme list rendered.
+
+**Figma wireframe:** Screen S6 — Insurance Tab (scheme listing)
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+---
+
+### US-04 — T&C Transparency Layer
+
+**Story:** As a user, I want every scheme’s terms and conditions shown clearly upfront, so that I know exactly what I’m agreeing to before I commit.
+
+**Story Points:** 3 · **Priority:** P0 (Must Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-04-01 | Every scheme detail screen must display before any enrollment action: what the user pays (exact amount and frequency), what the user gets (coverage amount and scope), exit conditions (how to cancel or withdraw), penalty for early exit (if any) |
+| FR-04-02 | All T&C content must be in plain Hindi first, with English toggle available |
+| FR-04-03 | Enrollment button must not be active until user has scrolled through the entire T&C section or tapped “I understand” confirmation |
+| FR-04-04 | If a scheme has a lock-in period, it must be shown in a highlighted warning box, not in body text |
+| FR-04-05 | A “Verify on official site” link must be present on every scheme detail screen, pointing to the scheme’s official government portal URL |
+
+**Modules:**
+
+**M2.2 — Scheme Detail and T&C Module**
+Scheme detail screen with four structured sections: What you pay, What you get, Exit conditions, Official verification link. Hindi-first rendering with English toggle. Scroll-gate on enrollment CTA. User flow: Scheme card tapped → Detail screen opens → T&C sections displayed → User scrolls or confirms → Enroll CTA activates.
+
+---
+
+### US-09 — Scheme Update Notifications
+
+**Story:** As a user, I want to be notified when a new scheme becomes relevant to my profile, so that I don’t miss support because I didn’t know it existed.
+
+**Story Points:** 5 · **Priority:** P1 (Should Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-09-01 | System should run a background scheme eligibility re-check every 7 days for each active user |
+| FR-09-02 | If a new scheme is added to the eligibility engine AND the user qualifies for it, a push notification should be sent within 24 hours |
+| FR-09-03 | Notification message must name the scheme and state the benefit in one sentence: “A new scheme you qualify for: PMJJBY — Rs. 2 lakh life cover for Rs. 436/year” |
+| FR-09-04 | Tapping the notification must deep-link directly to the scheme detail screen |
+| FR-09-05 | User should be able to manage notification preferences from settings (scheme alerts on/off) |
+
+**Modules:**
+
+**M2.4 — Push Notification Module (Scheme Alerts)**
+Firebase Cloud Messaging (FCM) integration for push notifications. Background job (Cloud Function) runs weekly eligibility re-check per user. Notification payload includes scheme_id, scheme_name, benefit_summary, deep_link. Hindi and English notification body based on user language preference. User flow: Background job runs → New scheme detected for user profile → FCM payload dispatched → User receives push → Taps → Scheme detail screen.
+
+---
+
+### US-10 — Scheme Comparison
+
+**Story:** As a user, I want to compare two or more schemes or banking products side by side, so that I can choose the one that actually fits my situation.
+
+**Story Points:** 5 · **Priority:** P1 (Should Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-10-01 | User should be able to select 2–3 schemes from the eligibility list for a side-by-side comparison view |
+| FR-10-02 | Comparison view must show: cost, coverage amount, exit conditions, lock-in period (or “none”), enrollment time, and a plain-language recommendation |
+| FR-10-03 | Comparison must highlight the lowest-cost option and the highest-coverage option with distinct labels |
+| FR-10-04 | User should be able to enroll in any scheme directly from the comparison view |
+
+**Modules:**
+
+**M2.3 — Scheme Comparison Module**
+Multi-select on scheme list (maximum 3 items). Comparison screen rendered as a horizontal table with rows per attribute. Recommended scheme highlighted with a badge. Direct enrollment CTA per column. User flow: Scheme list → Long-press or checkbox to select → [Compare selected] → Comparison table → [Enroll] from comparison.
+
+---
+
+<aside>
+
+## 5. EPIC 3 — Insurance Tab (DhanSathi Bima)
+
+</aside>
+
+**Epic description:** The Insurance tab is the first session’s primary value delivery point. It surfaces eligible insurance schemes (PMSBY, PMJJBY, PM-JAY), guides the user through enrollment via Vaani (in Hindi), and issues a downloadable certificate upon completion.
+
+**Business value:** PMSBY enrollment in Session 1 is the trust anchor. A user who receives Rs. 2 lakh cover for Rs. 20 in under 15 minutes has a verifiable, tangible outcome that drives both retention and word-of-mouth referral.
+
+**Success metrics:**
+
+| Metric | Target |
+| --- | --- |
+| Insurance tab open rate (as % of dashboard visits) | 60%+ |
+| PMSBY enrollment completion rate (of users who open insurance tab) | 40%+ |
+| Certificate download rate (of completed enrollments) | 70%+ |
+| Average time from tab open to enrollment confirmation | Under 15 minutes |
+
+---
+
+### US-05 — Hindi Voice-Guided Scheme Enrollment
+
+**Story:** As a user, I want to complete scheme enrollment through a Hindi voice-guided flow, so that I don’t need to read English forms or visit a government office.
+
+**Story Points:** 8 · **Priority:** P0 (Must Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-05-01 | Each insurance scheme card should have an “Enroll with Vaani” button that launches the Vaani voice enrollment session for that specific scheme |
+| FR-05-02 | Vaani enrollment session must present all mandatory enrollment information (T&C summary) as spoken Hindi audio before proceeding to form fill |
+| FR-05-03 | Vaani must collect only information not already in the user profile; pre-filled fields must be confirmed, not re-entered |
+| FR-05-04 | On enrollment completion, system should display: scheme name, coverage amount, premium amount, policy reference number, and a “Download Certificate” button |
+| FR-05-05 | Certificate download should generate a PDF with: user name, scheme name, coverage details, DhanSathi policy reference, official scheme logo |
+| FR-05-06 | Enrollment confirmation screen should include a “Share” button generating a pre-filled WhatsApp message and shareable certificate image for the referral hack |
+| FR-05-07 | If enrollment fails (API timeout or scheme portal error), system must display a clear error with an estimated retry time and preserve all entered data |
+
+**Modules:**
+
+**M3.1 — Insurance Scheme Listing Module**
+Tab screen showing eligible insurance schemes ranked by cost (lowest first). Each card: scheme name, premium, coverage, “Enroll with Vaani” CTA. User flow: Insurance tab → Scheme list (filtered by eligibility engine) → Scheme card tapped → Detail screen or Vaani session launched.
+
+**M3.2 — Enrollment Flow Module (Vaani-guided)**
+Receives scheme_id from Insurance tab. Launches Vaani session pre-configured with scheme-specific prompts. Collects Aadhaar verification, bank account selection, consent confirmation. Submits to scheme API or queues for partner processing. Handles partial completion state (session can be resumed). User flow: [Enroll with Vaani] → Vaani session starts → T&C summary spoken → Profile fields pre-confirmed → Missing fields collected → Submit → Confirmation.
+
+**Figma wireframe:** Screen S7 — Vaani Session
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**M3.3 — Enrollment Certificate Module**
+PDF generation (React Native Print / HTML-to-PDF). Certificate template: DhanSathi header, scheme name, user name, coverage amount, premium, reference ID, official scheme logo (from MyScheme API). Share functionality generates an image version for WhatsApp sharing (the certificate share growth hack). User flow: Enrollment confirmed → Certificate generated → [Download] saves PDF → [Share] opens share sheet with pre-filled WhatsApp message.
+
+**Figma wireframe:** Screen S8 — Enrollment Success
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**Acceptance Criteria (Story-Level — US-05):**
+
+- [ ]  A test user can complete PMSBY enrollment from the Insurance tab to certificate download in under 15 minutes on a Redmi 9A (2GB RAM device)
+- [ ]  Enrollment confirmation screen shows scheme name, coverage amount, annual premium, and a functional "Download Certificate" button immediately after confirmation
+- [ ]  If the enrollment API fails, all entered data is preserved, a clear error message is shown with a retry option, and the user is notified via push notification when enrollment processing completes
+
+---
+
+### UX Requirements — EPIC 3
+
+**Key screens:** S6 Insurance Scheme Listing, S7 Vaani Enrollment Session, S8 Enrollment Success and Certificate
+
+**Mobile considerations:**
+
+- Vaani’s microphone button must sit at the bottom center of the screen (thumb zone) with a minimum touch target of 56×56dp
+- Enrollment success screen must render the certificate thumbnail at sufficient resolution for screenshot sharing without the user needing to download first
+- Certificate "Share" CTA must open the native Android share sheet — not a custom in-app modal
+- All Vaani audio playback must respect the device audio profile: if the device is on silent, Vaani’s response must appear as text automatically without requiring a user action
+
+**Figma wireframe reference (Insurance path, screens S6–S8):** DhanSathi User Flow Wireframes
+
+---
+
+<aside>
+
+## 6. EPIC 4 — Investment Tab (DhanSathi Bachat)
+
+</aside>
+
+**Epic description:** The Investment tab presents liquid-only financial products for the Conservative and Moderate risk tiers. The core principle is: no lock-in by default. Users who have never trusted a formal investment product are shown options they can exit within 7 days — removing the psychological barrier entirely.
+
+**Business value:** Users with an active investment in DhanSathi have a financial anchor that reduces churn. The investment tab is the secondary retention mechanism after insurance enrollment.
+
+**Success metrics:**
+
+| Metric | Target |
+| --- | --- |
+| Investment tab open rate (% of active users in first week) | 40%+ |
+| Investment initiated by first-week users | 15%+ |
+| Average first investment amount | Rs. 500–1,000 |
+| Investment retention (user still has active investment at Day-30) | 60%+ |
+
+---
+
+### US-06 — Liquid Investment with Penalty-Free Withdrawal
+
+**Story:** As a user, I want to invest and withdraw my savings at any time without penalty, so that my money stays available for emergencies rather than locked into a fixed term.
+
+**Story Points:** 5 · **Priority:** P0 (Must Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-07-01 | Investment tab must display only products where exit is possible within 7 calendar days with no principal loss, by default for Conservative and Moderate risk tiers |
+| FR-07-02 | Each investment card must display: product name, annual return (%), exit timeline (e.g. “Withdraw within 1–2 business days”), minimum investment amount, regulatory body |
+| FR-07-03 | Risk tier label must be visible on the tab (“Your profile: Conservative — liquid options shown”) with an option to change the risk tier |
+| FR-07-04 | Investment flow must include: amount input (minimum Rs. 500), confirmation screen showing projected 1-month and 1-year return, bank debit confirmation |
+| FR-07-05 | Post-investment, the user’s portfolio should be visible in the dashboard as a summary card |
+| FR-07-06 | Withdrawal request must be completable in under 3 taps from the portfolio view |
+| FR-07-07 | System must show “Withdraw within X business days” language prominently on every investment card and on the investment confirmation screen — never show it as a footnote |
+
+**Non-Functional Requirements:**
+
+| ID | NFR |
+| --- | --- |
+| NFR-07-01 | Investment product data must come from verified, SEBI-regulated sources only (AMC APIs or AMFI data) |
+| NFR-07-02 | Payment initiation must use UPI (Razorpay or Cashfree) and must not store card or bank credentials |
+
+**Modules:**
+
+**M4.1 — Liquid Investment Options Module**
+Connects to AMFI/AMC data feed for live NAV and fund metadata. Filters by user risk tier and exit timeline (less than or equal to 7 days). Renders as card list ranked by return. User flow: Investment tab → Risk tier badge → Product list → Card tapped → Detail screen → [Invest].
+
+**Figma wireframe:** Screen S9 — Investment Tab
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**M4.2 — Risk-Tier Investment Filter Module**
+Client-side filter applied to product list based on user’s risk_tier from profile. Conservative: overnight and liquid funds only. Moderate: liquid, ultra-short term funds. Growth: includes short-term debt funds. Filter change prompt asks one question (“Are you comfortable with a 30-day lock-in?”) before allowing Growth tier access.
+
+**M4.3 — Investment Action Module**
+Amount input → projected returns calculator (simple: amount × annual_rate / 12) → UPI payment initiation → Confirmation screen → Portfolio updated. Handles payment failure with retry flow and clear error messaging. User flow: Product card → [Invest] → Amount input → Return preview → [Confirm] → UPI deeplink → Payment confirmed → Portfolio updated.
+
+**Figma wireframe:** Screen S10 — Investment Detail
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**Acceptance Criteria (Story-Level — Investment, US-06 EPIC 4):**
+
+- [ ]  Investment tab shows only products with a confirmed exit timeline of 7 days or fewer for Conservative and Moderate risk tiers — no lock-in products appear by default
+- [ ]  User can request a withdrawal in under 3 taps from the portfolio card on the dashboard
+- [ ]  "Withdraw within X business days" language appears on every product card, the investment detail screen, and the post-investment confirmation screen — never in footnote or secondary text
+
+---
+
+### UX Requirements — EPIC 4
+
+**Key screens:** S9 Investment Product List (with risk tier badge), S10 Investment Detail and Amount Input, Dashboard portfolio summary card
+
+**Mobile considerations:**
+
+- Annual return percentage must be the largest visible figure on each product card — larger than the fund name
+- "Withdraw anytime" or "Withdraw within X days" must appear as a visual badge, not as body text, on every card
+- Amount input field must launch the numeric keyboard by default, not the alphanumeric keyboard
+- Investment CTA must be visually disabled until the entered amount meets the minimum investment threshold, with a helper text showing the minimum
+
+**Figma wireframe reference (Investment path, screens S9–S10):** DhanSathi User Flow Wireframes
+
+---
+
+<aside>
+
+## 7. EPIC 5 — Borrowing Tab (DhanSathi Udaar)
+
+</aside>
+
+**Epic description:** The Borrowing tab exists to prevent users from accessing predatory informal credit by surfacing regulated alternatives before they reach a moneylender. The Vaani check (“Do you actually need to borrow?”) is the first step, not the loan product listing.
+
+**Business value:** Predatory moneylender prevention is a brand-defining product moment. Users who see Rs. 3,000 interest vs. Rs. 550 interest on a Rs. 5,000 loan have a concrete, calculable reason to stay in the DhanSathi ecosystem.
+
+**Success metrics:**
+
+| Metric | Target |
+| --- | --- |
+| Borrowing tab open rate | 20%+ of active users within first month |
+| Moneylender cost comparison view rate | 70%+ of borrowing tab sessions |
+| Formal loan option click-through (PM Mudra application initiation) | 15%+ of comparison views |
+
+---
+
+**No Must Have user story covers the Borrowing tab explicitly. This EPIC is P1 overall. The core stories are derived from the product architecture and the research insight that moneylender prevention is a key user outcome.**
+
+**Functional Requirements for the Borrowing Tab:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-BT-01 | Vaani session must be the default entry point to the Borrowing tab; user must answer one question (“How much do you need and for how long?”) before any loan product is shown |
+| FR-BT-02 | System must check user’s existing DhanSathi savings balance first; if sufficient, it must present a “Use your savings” option before showing borrowing products |
+| FR-BT-03 | Moneylender cost comparison must be shown for the user’s stated borrowing amount before any formal loan product is listed |
+| FR-BT-04 | Comparison card must show: moneylender (informal) total interest cost vs. PM Mudra or Jan Samarth total interest cost for the same amount and same repayment term |
+| FR-BT-05 | Only NBFC products with annualised rates below 24% and government-backed loan schemes may appear in the product listing |
+| FR-BT-06 | “Apply for PM Mudra” or “Apply on Jan Samarth” must open the official portal within an in-app browser (not redirect to external app) |
+| FR-BT-07 | User should be able to bypass the Vaani check via a visible “Skip — show loan options” link, which is always present but secondary |
+
+**Modules:**
+
+**M5.1 — Borrowing Need Assessment Module (Vaani Check)**
+Vaani session with 1–3 questions: amount needed, repayment timeline, reason (optional). System checks user’s liquid savings balance first. If savings cover the need, Vaani presents that option first. Loan products displayed only after. User flow: Borrowing tab → Vaani asks “कितने रुपये चाहिए?” → Amount stated → Savings check → If sufficient: “Use savings” option shown → If not: Comparison view.
+
+**Figma wireframe:** Screen S11 — Borrowing Tab
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**M5.2 — Cost Comparison Module**
+Takes borrowing amount and term from Vaani session. Calculates: informal moneylender interest (5% per month assumed, clearly labeled as “typical informal rate”) vs. PM Mudra rate (10.5% per year, government source). Renders as side-by-side comparison card with total interest numbers prominent. User flow: Amount and term received → Comparison card rendered → [Apply for PM Mudra] → In-app browser to Jan Samarth portal.
+
+**Figma wireframe:** Screen S12 — Loan Comparison
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**M5.3 — PM Mudra Eligibility Module**
+Basic eligibility check against PM Mudra Shishu criteria (business registration, loan amount up to Rs. 50,000). If user qualifies, a “You likely qualify” badge appears. If document pre-fill is available (EPIC 7), application fields are pre-populated in the in-app browser session. Connects to Jan Samarth portal or PM Mudra partner bank API.
+
+---
+
+<aside>
+
+## 8. EPIC 6 — Vaani Voice Agent
+
+</aside>
+
+**Epic description:** Vaani is the AI conversational layer that makes DhanSathi accessible to users who cannot or will not navigate traditional app interfaces. She answers questions, guides enrollments, performs the borrowing check, and provides personalized recommendations — in Hindi, within 5 questions per session, always ending with one specific actionable recommendation.
+
+**Business value:** Vaani is the product’s primary differentiator. No existing financial app in India serves the informal worker segment with a Hindi voice agent. Every Vaani session that completes is a trust event. Every session that fails is a churn event.
+
+**Success metrics:**
+
+| Metric | Target |
+| --- | --- |
+| Vaani session start rate (% of active users who start a session) | 50%+ in first week |
+| Vaani session completion rate (recommendation received) | 70%+ |
+| Median questions per session | 3–4 (maximum 5) |
+| User satisfaction with Vaani response (thumbs-up rate) | 75%+ |
+
+---
+
+### US-05 (Vaani component) + US-07 — Voice Agent Recommendation Session
+
+**Story 1:** As a user, I want to complete scheme enrollment through a Hindi voice-guided flow, so that I don’t need to read English forms or visit a government office.
+
+**Story 2 (Should Have):** As a user, I want the voice assistant to ask me up to 5 questions and give me one specific recommendation, so that I get guided advice without having to navigate the app myself.
+
+**Story Points:** 13 (combined) · **Priority:** P0 for voice enrollment, P1 for recommendation session
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-08-01 | Vaani must respond in the user’s language: Hindi if user speaks Hindi, English if user speaks English, within the same session |
+| FR-08-02 | Each Vaani session must not exceed 5 questions before producing a recommendation or action |
+| FR-08-03 | Vaani must read all data already present in the user profile before asking any question; questions must only fill information gaps, never re-ask confirmed data |
+| FR-08-04 | Every Vaani session must end with one specific recommendation and a single actionable next step: “I suggest you enroll in PMSBY. It costs Rs. 20 per year. Want me to start the enrollment now?” |
+| FR-08-05 | Vaani must never use financial jargon without a plain-language explanation in the same sentence |
+| FR-08-06 | If a user’s Vaani session is interrupted (call, app background), the session state must be preserved for 10 minutes; user should be able to resume |
+| FR-08-07 | Vaani must never recommend a product that requires locking money beyond the user’s stated {lock_in_tolerance}. Default to zero lock-in products unless user has explicitly specified otherwise |
+| FR-08-08 | Vaani must include an escape to human support: “अगर आपको अभी किसी इंसान से बात करनी है, तो यहाँ tap करें” — always visible as a secondary option |
+
+**Non-Functional Requirements:**
+
+| ID | NFR |
+| --- | --- |
+| NFR-08-01 | STT transcription latency must be under 2 seconds on a 4G connection |
+| NFR-08-02 | Claude API response (recommendation generation) must complete in under 4 seconds |
+| NFR-08-03 | TTS audio playback must begin streaming within 1 second of Claude response completion |
+| NFR-08-04 | All voice data must be processed in-session and not stored permanently; transcripts may be retained for 30 days for support purposes only |
+
+**Modules:**
+
+**M6.1 — STT/TTS Module (Sarvam AI)**
+Integrates Sarvam AI Saarika-v2 for Hindi STT (speech-to-text) and Sarvam Bulbul-v1 for TTS (text-to-speech). Handles microphone permissions, audio buffering, and real-time transcription. Falls back to text input if microphone unavailable or STT confidence is below 70%. User flow: Vaani session starts → Mic opens → User speaks → STT transcription → Passed to Claude → Claude response → TTS playback → Next question or recommendation.
+
+**M6.2 — Claude API Conversation Engine Module**
+System prompt defines Vaani’s persona, session constraints (5-question cap, single recommendation, lock_in_tolerance rule, Hindi-first rule, jargon rule). User profile injected into system prompt at session start: {income_type, monthly_income, family_size, risk_tier, existing_schemes, last_3_transactions_summary, expense_appetite, lock_in_tolerance}. Claude manages conversation state within the session context. Tool calls available: scheme_lookup(scheme_id), investment_filter(risk_tier, max_lock_in_days), savings_check(user_id). Model: claude-sonnet-4-6.
+
+**M6.3 — Session State Management Module**
+Stores active Vaani session state in Firebase Realtime Database: session_id, user_id, session_context (array of question-answer pairs), current_question_number, session_type (insurance, investment, borrowing, general), timestamp. Session expires after 10 minutes of inactivity. Resumes on return if within expiry window.
+
+**M6.4 — Recommendation Output Module**
+Parses Claude’s final recommendation JSON: {recommendation_type, product_id, product_name, action_required, action_label, action_deep_link, confidence_score}. Renders as a structured card: recommendation summary in Hindi, action button (e.g., “PMSBY में Enroll करें”), optional detail expansion. Routes to enrollment or investment flow on action button tap.
+
+**Figma wireframe:** Screen S7 — Vaani Session (voice interface and recommendation card context)
+
+https://www.figma.com/design/Vhz7DU9cHXZgzS1r2rMTP1/DhanSathi---User-Flow-Wireframes
+
+**Acceptance Criteria (Story-Level — US-07, Vaani Recommendation Session):**
+
+- [ ]  Vaani session reaches a recommendation in 5 or fewer questions for all test scenarios across insurance, investment, and borrowing contexts — no session requires a 6th question
+- [ ]  Recommendation output renders as a structured card with product name, benefit summary in Hindi, and a single actionable CTA button
+- [ ]  When the app is backgrounded mid-session, conversation state is preserved and a "Resume your session?" prompt appears on return within the 10-minute window
+
+---
+
+### UX Requirements — EPIC 6
+
+**Key screens:** Vaani session interface (S7), recommendation output card, text fallback input view
+
+**Mobile considerations:**
+
+- Vaani microphone button must have a minimum touch target of 56×56dp and sit in the bottom-centre thumb zone
+- Progress indicator ("Question 2 of 5") must be visible at all times during a session without requiring scroll — place it in a sticky header or subheader
+- Audio waveform visualization must use a simple animated pulse indicator rather than a real-time waveform to avoid battery drain on entry-level devices
+- Text fallback mode (keyboard input instead of voice) must be accessible with a single tap at all times — a keyboard icon always visible alongside the mic button
+- If the device is on silent mode, Vaani’s spoken response must automatically render as text without any user action required
+
+**Figma wireframe reference (Vaani session, Screen S7):** DhanSathi User Flow Wireframes
+
+---
+
+<aside>
+
+## 9. EPIC 7 — Trust, Anti-Scam, and Privacy Layer
+
+</aside>
+
+**Epic description:** Three of four research interviewees showed scam anxiety as a primary blocker to engaging with a new financial product. This epic ensures that trust is built architecturally, not as an afterthought. It covers the anti-scam declaration, Account Aggregator consent management, and data privacy compliance.
+
+**Business value:** Without this epic, the product cannot convert users who have been targeted by financial scams. Suresh (Interview 1) blocks all unknown callers because colleagues were scammed. Truptimayee (Interview 3) only trusts products after personal verification. This epic creates the conditions for trust formation.
+
+**Success metrics:**
+
+| Metric | Target |
+| --- | --- |
+| Anti-scam screen completion rate (user read and confirmed) | 90%+ |
+| Account Aggregator consent revocation rate | Below 5% monthly |
+| Security-related support tickets | Zero increase post-launch |
+
+---
+
+### US-10 — Anti-Scam OTP Declaration
+
+**Story:** As a user, I want a clear statement that DhanSathi will never call or message me asking for an OTP, so that I can trust the product isn’t a scam.
+
+**Story Points:** 2 · **Priority:** P1 (Should Have)
+
+**Functional Requirements:**
+
+| ID | Requirement |
+| --- | --- |
+| FR-12-01 | Anti-scam declaration screen must appear before any Account Aggregator consent request, and must not be skippable |
+| FR-12-02 | Declaration must state in Hindi and English: “DhanSathi kabhi OTP, password, ya bank details phone ya message par nahi maangega. Agar koi DhanSathi ke naam se maange, woh fraud hai.” |
+| FR-12-03 | User must tap “I understand” to proceed; declaration cannot be auto-dismissed |
+| FR-12-04 | Declaration must reappear if user’s device shows a new DhanSathi login (new device or 30 days since last shown) |
+| FR-12-05 | A “Report a scam call” link must be accessible from the app’s Help section, which opens a pre-filled WhatsApp message to DhanSathi support |
+
+**Additional functional requirements for the Trust and Privacy layer (cross-cutting):**
+
+| ID | Requirement |
+| --- | --- |
+| FR-12-06 | Account Aggregator consent must display exact data scope (which data, for how long, for what purpose) in plain language before any consent is recorded |
+| FR-12-07 | Users must be able to revoke AA consent from Settings at any time with a single tap; revocation must trigger data deletion within 24 hours |
+| FR-12-08 | No user data (financial or personal) may be shared with B2B2C acquisition partners under any condition; partners receive only aggregate enrollment metrics |
+| FR-12-09 | All PII must be encrypted at rest (AES-256) and in transit (TLS 1.2+) |
+| FR-12-10 | App must comply with DPDP Act 2023: data minimization, purpose limitation, user right to delete, and privacy notice in Hindi |
+
+**Acceptance Criteria (Story-Level — US-11, Anti-Scam):**
+
+- [ ]  Anti-scam declaration screen appears before the Account Aggregator consent screen for 100% of new users and cannot be dismissed without tapping "I understand" — verified across all onboarding test cases
+- [ ]  Declaration reappears on the user’s first login on a new device and after 30 days since the last acknowledgment timestamp
+- [ ]  "Report a scam call" is accessible from the Help section in under 3 taps from any screen and opens a pre-filled support contact method
+
+**Modules:**
+
+**M8.1 — Anti-Scam Declaration Module**
+Interstitial screen shown before AA consent. Non-dismissible. Bilingual (Hindi/English). “I understand” confirmation tap required. Stores declaration_confirmed_at timestamp in user profile. Re-shows on new device login or after 30-day timeout. User flow: Onboarding → Anti-scam screen → “I understand” tap → AA consent screen.
+
+**M8.2 — Account Aggregator Consent Module**
+Displays consent scope: data type, retention period, purpose. Stores consent_given_at, consent_scope, consent_token in encrypted Firestore. Revocation available in Settings → Privacy → Revoke data access. Revocation triggers: AA token invalidation, queued data deletion job (24-hour SLA). User flow: AA consent screen → Scope displayed → [Give Consent] → Token stored → [Settings → Revoke] → Deletion job triggered.
+
+**M8.3 — Data Privacy and Encryption Module**
+AES-256 encryption at rest for all Firestore PII fields. TLS 1.2+ for all API calls. Masked Aadhaar storage only (last 4 digits). DPDP Act compliance: privacy notice (Hindi and English) accessible from app footer, data deletion request flow, retention policy (transaction data: 12 months, session data: 30 days). RBAC: users can only access their own data; partner accounts have access to aggregate reports only.
+
+**Figma brand reference:** DhanSathi brand identity file — use brand colours and typography consistently on all trust-layer screens. Midnight Indigo (#1B2F5C) for headers, Cream White (#FDF6ED) for background, Marigold Amber (#E8901A) for the primary CTA button.
+
+https://www.figma.com/design/LdJKi2Tqmgr5gu2SFRjWqM/DhanSathi---Brand-Identity
+
+### UX Requirements — EPIC 8 (Trust and Anti-Scam)
+
+**Key screens:** Anti-scam declaration interstitial, Account Aggregator consent screen, Privacy and consent settings page
+
+**Mobile considerations:**
+
+- Anti-scam declaration text must meet WCAG AA contrast ratio (minimum 4.5:1) for legibility in outdoor conditions
+- Consent revocation in Settings must be reachable in under 3 taps from any screen — do not bury it in nested menus
+- Privacy notice must be available in Hindi and English with a language toggle visible without scrolling
+- "I understand" button on the anti-scam screen must use the brand’s primary CTA colour (Marigold Amber) — not a grey or ghost button — to signal this is a real action, not a dismissal
+
+**Figma brand reference (trust screen visual identity):** DhanSathi Brand Identity
+
+---
+
+<aside>
+
+## 11. Cross-Cutting Non-Functional Requirements
+
+</aside>
+
+### 11.1 Performance
+
+| Metric | Target |
+| --- | --- |
+| App cold start time | Under 3 seconds on mid-range Android (4GB RAM) |
+| Screen transition time | Under 300ms |
+| API response time (scheme eligibility engine) | Under 2 seconds |
+| Vaani STT transcription latency | Under 2 seconds |
+| Claude API response (recommendation) | Under 4 seconds |
+| AA data fetch | Under 5 seconds |
+
+### 11.2 Telemetry (Mandatory per Epic)
+
+**EPIC 1 events:** `onboarding_started`, `income_type_selected`, `aa_consent_screen_shown`, `aa_consent_given`, `aa_consent_declined`, `risk_profile_started`, `risk_profile_completed`, `dashboard_viewed`
+
+**EPIC 2 events:** `scheme_list_opened`, `scheme_card_tapped`, `tc_screen_viewed`, `tc_scrolled_to_bottom`, `enroll_cta_tapped`, `notification_received`, `notification_opened`, `comparison_view_opened`
+
+**EPIC 3 events:** `insurance_tab_opened`, `vaani_enrollment_session_started`, `enrollment_submitted`, `enrollment_confirmed`, `certificate_downloaded`, `certificate_shared`
+
+**EPIC 4 events:** `investment_tab_opened`, `product_card_tapped`, `investment_amount_entered`, `investment_confirmed`, `withdrawal_requested`
+
+**EPIC 5 events:** `borrowing_tab_opened`, `vaani_check_started`, `comparison_viewed`, `mudra_application_initiated`
+
+**EPIC 6 events:** `vaani_session_started`, `vaani_question_answered`, `vaani_recommendation_received`, `vaani_session_completed`, `vaani_session_abandoned`, `vaani_thumbs_up`, `vaani_thumbs_down`, `vaani_escalated_to_human`
+
+**EPIC 7 events:** `antiscam_screen_shown`, `antiscam_confirmed`, `aa_consent_revoked`, `privacy_notice_opened`
+
+**Required dashboards:**
+- Onboarding funnel (income type → AA consent → risk profile → dashboard)
+- Session 1 enrollment funnel (dashboard → insurance tab → enrollment start → confirmation)
+- Vaani session health (completion rate, question distribution, recommendation acceptance rate)
+- Churn cohort (Day-7, Day-14, Day-30 retention by acquisition source)
+
+### 11.3 Reliability
+
+- App must function in offline mode for dashboard reading (cached last-fetched data)
+- Vaani session failures must not lose conversation state; retry must restore context
+- AA data unavailability must fall back to manual income input without crashing the onboarding flow
+- Push notification delivery failure must not affect app functionality
+
+---
+
+<aside>
+
+## 12. Global Edge Cases and Failure Scenarios
+
+</aside>
+
+| Scenario | System behavior |
+| --- | --- |
+| AA consent given but API returns no transaction data | Fall back to manual income input; mark AA as pending re-fetch; do not fail onboarding |
+| Scheme eligibility engine returns empty list for user profile | Display “No schemes found for your current profile” with a prompt to update income type |
+| Vaani session times out mid-conversation | Session state preserved for 10 minutes; “Resume session?” prompt on app reopen |
+| Enrollment API fails (scheme portal timeout) | Error screen: “Enrollment is processing — check back in 24 hours”; data preserved; user notified via push when processed |
+| OCR extraction confidence below 80% | Flag field to user for manual confirmation; do not auto-submit low-confidence extractions |
+| Aadhaar eKYC OTP fails three times | Lock eKYC for 30 minutes; offer manual document upload as alternative |
+| User opens the app with no internet | Show cached dashboard with a “Last updated [timestamp]” banner; Vaani and enrollment flows disabled with a clear offline message |
+| Investment product data unavailable (AMFI API down) | Show cached product list with “Prices as of [last_updated]” label; disable investment action until live data is available |
+| User attempts to enroll in a scheme they are already enrolled in | System detects existing enrollment from profile; shows “Already enrolled” status with certificate download option |
+
+---
+
+<aside>
+
+## 13. Global Acceptance Criteria
+
+</aside>
+
+- All 6 Must Have user stories pass QA before MVP release
+- Scheme eligibility engine returns correct results for 100% of test profiles across PMSBY, PMJJBY, PM-JAY, and PM Mudra
+- Vaani session completes in under 5 questions for all test scenarios and produces a typed recommendation object
+- Enrollment flow completes on a Redmi 9A (entry-level Android, 2GB RAM) in under 15 minutes for PMSBY
+- Anti-scam declaration appears before AA consent for 100% of new users
+- No PII appears in application logs or analytics events
+- App cold start under 3 seconds on mid-range Android
+
+---
+
+<aside>
+
+## 14. Success Metrics (Business-Level)
+
+</aside>
+
+### 14.1 Primary Metrics
+
+| Metric | Target |
+| --- | --- |
+| Session 1 scheme enrollment completion rate | 40%+ |
+| Day-30 retention | 25%+ |
+| Freemium to paid conversion at Day-90 | 10%+ |
+| Vaani session completion rate | 70%+ |
+
+### 14.2 Secondary Metrics
+
+| Metric | Target |
+| --- | --- |
+| App downloads in first 6 months | 30,000 |
+| PMSBY enrollments in first 6 months | 10,000+ |
+| Average investment amount per active investor | Rs. 500–2,000 |
+| Certificate share rate (organic referral trigger) | 25%+ of completed enrollments |
+
+### 14.3 Guardrail Metrics
+
+- Enrollment error rate must not exceed 5% of submissions
+- Vaani session abandonment rate must not exceed 30%
+- Security incidents: zero
+- Scheme eligibility false-positive rate: below 2% (user qualifies per DhanSathi but does not qualify per official portal)
+
+---
+
+<aside>
+
+## 15. Out of Scope (Explicit Deferrals)
+
+</aside>
+
+This PRD does not include:
+
+- **Income and expense auto-categorization:** Deferred to post-MVP. Requires reliable transaction tagging API and is explicitly conditional on API availability (marked as Could Have in user stories, requires AA data with category metadata).
+- **WhatsApp first-session and in-app WhatsApp channel:** Future scope. Requires WhatsApp Business API integration and is V2 product architecture.
+- **Daily, weekly, or monthly digest notifications:** Deferred. Not required for Session 1 value delivery; adds complexity to the notification system without MVP-critical impact.
+- **iOS build:** Android-only at MVP. iOS requires separate build pipeline and additional store compliance work.
+- **Tax filing (ITR):** Explicitly out of scope. Seasonal use case; Cleartax owns this. Addressed in Won’t Have user stories.
+- **Loan marketplace:** Explicitly out of scope. Requires lending license, 6+ months of behavioral data for underwriting, and conflicts with guidance-only V1 positioning. Addressed in Won’t Have user stories.
+- **Advanced investment portfolio analytics:** Post-MVP. Basic portfolio view (balance, projected return) is in scope; charts, benchmarks, and performance history are not.
+- **Family plan and multi-user accounts:** V2 feature. Mentioned as a CLV lever in Section E but not required for MVP.
+- **Suresh segment’s interest rate simulator:** Could Have, not built at MVP due to AMFI API complexity and low first-session conversion value relative to the Insurance tab.
+
+---
+
+*PRD complete. Version 1.0 — August 2026. Ready for engineering review and sprint planning.*
