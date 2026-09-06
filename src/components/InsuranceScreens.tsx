@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAppStore } from '../store';
 import { C, jakarta, work, devanagari, pillLabelStyle, cardStyle, primaryOrDisabled } from '../ui';
 import { IconSearch, IconClock, IconMic, IconExternal, IconDownload, IconShare, IconCheck } from './Icons';
@@ -59,9 +59,25 @@ export function InsuranceListScreen() {
 export function InsuranceDetailScreen() {
   const { s, actions, derived } = useAppStore();
   const { t, L, selectedScheme } = derived;
+  const termsEndRef = useRef<HTMLDivElement>(null);
+  const { onTermsRead } = actions;
+
+  useEffect(() => {
+    const el = termsEndRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      onTermsRead();   // no observer support: do not trap the user behind a gate we cannot open
+      return;
+    }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) onTermsRead();
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onTermsRead, selectedScheme.id]);
+
   return (
     <>
-      <div onScroll={actions.onScrollTC} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20, padding: '20px 20px 24px 20px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 20, padding: '20px 20px 24px 20px' }}>
         <div style={{ ...cardStyle, padding: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={pillLabelStyle}>{L(selectedScheme.category, selectedScheme.categoryHi)}</span>
           <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 20, color: C.ink }}>{L(selectedScheme.fullNameEn, selectedScheme.fullNameHi)}</span>
@@ -88,6 +104,8 @@ export function InsuranceDetailScreen() {
           </div>
         </div>
         <a href={selectedScheme.officialUrl} target="_blank" rel="noreferrer" style={{ fontFamily: work, fontWeight: 600, fontSize: 14, color: C.green, display: 'inline-flex', alignItems: 'center', gap: 5 }}>{t.verifyOfficial}<IconExternal /></a>
+        {/* End-of-terms marker: once this has been on screen, the terms have been seen. */}
+        <div ref={termsEndRef} style={{ height: 1 }} />
         <div style={{ height: 80 }} />
       </div>
       <div style={{ position: 'sticky', bottom: 0, padding: '14px 20px 20px 20px', background: `linear-gradient(180deg,rgba(247,249,251,0) 0%,${C.bg} 35%)`, display: 'flex', flexDirection: 'column', gap: 8 }}>

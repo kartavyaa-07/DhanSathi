@@ -343,10 +343,13 @@ export function useAppStoreImpl() {
 
   // ---- insurance ----
   const onOpenSchemeDetail = (id: string) => patch({ selectedSchemeId: id, tcScrolled: false, screen: 'insurancedetail' });
-  const onScrollTC = (e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    if (!s.tcScrolled && el.scrollTop + el.clientHeight >= el.scrollHeight - 40) patch({ tcScrolled: true });
-  };
+  // Unlocks the enroll button once the end of the terms has actually been on
+  // screen. This used to compare scrollTop against the detail pane's own
+  // scrollHeight, but that pane never scrolls — the Shell's outer container
+  // does — so the handler never fired and the button stayed disabled forever.
+  // The screen now reports the sentinel coming into view instead, which does
+  // not care which ancestor is doing the scrolling.
+  const onTermsRead = () => patch(prev => (prev.tcScrolled ? {} : { tcScrolled: true }));
 
   const onEnrollWithVaani = (schemeId: string) => {
     patch(p => ({ vaaniOpen: true, vaaniMode: 'enroll', enrollSchemeId: schemeId, enrollStep: 0, screen: 'vaani', vaaniReturnScreen: p.screen }));
@@ -673,7 +676,7 @@ export function useAppStoreImpl() {
       onSelectIncomeType, onContinueIncome, onConfirmAntiscam,
       onStartAALink, onSkipToManual, onSelectProvider, onManualIncomeChange, onSubmitManual,
       onAnswerQuiz, onContinueToDashboard, onRetakeQuiz,
-      onOpenSchemeDetail, onScrollTC, onEnrollWithVaani, onEnrollSelectedScheme, onEnrollContinue,
+      onOpenSchemeDetail, onTermsRead, onEnrollWithVaani, onEnrollSelectedScheme, onEnrollContinue,
       onDownloadCertificate, onShareCertificate, onBackDashboard, onCloseVaani,
       onOpenGeneralVaani, sendVaaniUserMessage, onGoToRecommendation, onAskVaaniToRegister, onChangeVaaniText, onVaaniInputKeydown, onMicToggle,
       onOpenTracker, onSetTrackerKind, onTrackerKey, onSelectTrackerCategory,
