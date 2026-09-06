@@ -231,7 +231,7 @@ export const EN = {
   quickInsurance: 'Insurance', quickInvest: 'Invest', quickBorrow: 'Borrow',
   askVaani: 'Ask Vaani', langTagline: 'Your financial companion, in your language.',
   // ---- Vaani ----
-  vaaniName: 'Vaani', listening: 'Listening…', thinkingShort: 'Thinking…', tapMicOrType: 'Tap mic or type to talk',
+  vaaniName: 'Vaani', searchingSources: 'Checking official sources…', listening: 'Listening…', thinkingShort: 'Thinking…', tapMicOrType: 'Tap mic or type to talk',
   noApiKeyNotice: 'No Claude API key set — add one in Profile to let Vaani respond.',
   submitEnrollment: 'Submit Enrollment', linkedBankMasked: 'Linked Bank ••••1234',
   vaaniGenericError: 'Sorry, something went wrong. Please try again.',
@@ -308,7 +308,7 @@ export const HI: typeof EN = Object.assign({}, EN, {
   headerQuickProfile: 'त्वरित प्रोफ़ाइल', headerSchemeDetails: 'योजना का विवरण', headerInvest: 'निवेश', headerProfile: 'प्रोफ़ाइल',
   quickInsurance: 'बीमा', quickInvest: 'निवेश', quickBorrow: 'उधार',
   askVaani: 'वाणी से पूछें', langTagline: 'आपकी भाषा में, आपका वित्तीय साथी।',
-  vaaniName: 'वाणी', listening: 'सुन रही हूं…', thinkingShort: 'सोच रही हूं…', tapMicOrType: 'बात करने के लिए माइक दबाएं या लिखें',
+  vaaniName: 'वाणी', searchingSources: 'सरकारी स्रोत जांच रही हूं…', listening: 'सुन रही हूं…', thinkingShort: 'सोच रही हूं…', tapMicOrType: 'बात करने के लिए माइक दबाएं या लिखें',
   noApiKeyNotice: 'Claude API की सेट नहीं है — वाणी के जवाब देने के लिए प्रोफ़ाइल में जोड़ें।',
   submitEnrollment: 'आवेदन जमा करें', linkedBankMasked: 'जुड़ा बैंक ••••1234',
   vaaniGenericError: 'माफ़ कीजिए, कुछ गड़बड़ हुई। कृपया दोबारा कोशिश करें।',

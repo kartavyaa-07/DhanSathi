@@ -23,7 +23,7 @@ export function VaaniScreen() {
     let node: HTMLElement | null = feedEndRef.current;
     while (node && node.scrollHeight <= node.clientHeight + 1) node = node.parentElement;
     node?.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
-  }, [s.vaaniMessages.length, s.vaaniLoading, s.vaaniRecommendation, s.enrollStep]);
+  }, [s.vaaniMessages.length, s.vaaniLoading, s.vaaniStreamText, s.vaaniRecommendation, s.enrollStep]);
 
   const enrollHi = derived.enrollStepContent.hi;
   const enrollEn = derived.enrollStepContent.en;
@@ -47,7 +47,7 @@ export function VaaniScreen() {
           </div>
         </div>
         <span style={{ fontFamily: work, fontSize: 14, color: C.inkSoft }}>
-          {s.vaaniListening ? t.listening : s.vaaniLoading ? t.thinkingShort : t.tapMicOrType}
+          {s.vaaniListening ? t.listening : s.vaaniSearching ? t.searchingSources : s.vaaniLoading ? t.thinkingShort : t.tapMicOrType}
         </span>
         {!hasApiKey() && isChat && (
           <span style={{ fontFamily: work, fontSize: 12, color: C.danger, textAlign: 'center' }}>
@@ -78,8 +78,15 @@ export function VaaniScreen() {
               );
             })}
             {s.vaaniLoading && (
-              <div style={{ alignSelf: 'flex-start', background: 'rgba(247,249,251,0.9)', border: `1px solid ${C.borderStrong}`, borderRadius: '2px 16px 16px 16px', padding: '12px 16px' }}>
-                <span style={{ fontFamily: work, fontSize: 14, color: C.inkFaint }}>{t.vaaniThinking}</span>
+              <div style={{ alignSelf: 'flex-start', maxWidth: 280, background: 'rgba(247,249,251,0.9)', border: `1px solid ${C.borderStrong}`, borderRadius: '2px 16px 16px 16px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {s.vaaniStreamText ? (
+                  <span style={{ fontFamily: devanagari, fontWeight: 500, fontSize: 16, lineHeight: '24px', color: C.ink }}>{s.vaaniStreamText}</span>
+                ) : (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: work, fontSize: 14, color: C.inkFaint }}>
+                    <TypingDots />
+                    {s.vaaniSearching ? t.searchingSources : t.vaaniThinking}
+                  </span>
+                )}
               </div>
             )}
             {s.vaaniRecommendation && (
@@ -184,5 +191,22 @@ function Row({ label, value }: { label: string; value: string }) {
       <span style={{ fontFamily: work, fontSize: 13, color: C.inkFaint }}>{label}</span>
       <span style={{ fontFamily: work, fontWeight: 600, fontSize: 13, color: C.ink }}>{value}</span>
     </div>
+  );
+}
+
+/** Three-dot pulse, so a wait for the model reads as activity rather than a frozen screen. */
+function TypingDots() {
+  return (
+    <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+      {[0, 1, 2].map(i => (
+        <span
+          key={i}
+          style={{
+            width: 6, height: 6, borderRadius: 9999, background: C.green,
+            display: 'inline-block', animation: `ds-blink 1.2s ${i * 0.18}s infinite ease-in-out`,
+          }}
+        />
+      ))}
+    </span>
   );
 }

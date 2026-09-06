@@ -65,6 +65,9 @@ export interface AppState {
   vaaniHistory: { role: 'user' | 'assistant'; content: string }[];
   vaaniListening: boolean;
   vaaniLoading: boolean;
+  /** Reply text as it streams in, and whether Claude is mid web-search. */
+  vaaniStreamText: string;
+  vaaniSearching: boolean;
   vaaniTextInput: string;
   vaaniQuestionCount: number;
   vaaniRecommendation: VaaniRecommendation | null;
@@ -106,7 +109,7 @@ const initialState: AppState = {
   aaStep: 'consent', aaLinked: false, manualIncome: '', declaredIncome: 0,
   quizIndex: 0, riskScore: 0, riskTier: null,
   enrolledSchemes: [], selectedSchemeId: null, tcScrolled: false,
-  vaaniOpen: false, vaaniMode: 'general', vaaniMessages: [], vaaniHistory: [], vaaniListening: false, vaaniLoading: false,
+  vaaniOpen: false, vaaniMode: 'general', vaaniMessages: [], vaaniHistory: [], vaaniListening: false, vaaniLoading: false, vaaniStreamText: '', vaaniSearching: false,
   vaaniTextInput: '', vaaniQuestionCount: 0, vaaniRecommendation: null, vaaniReturnScreen: 'dashboard', vaaniError: '',
   enrollSchemeId: null, enrollStep: 0,
   certificate: null, toastMessage: '',
@@ -429,6 +432,9 @@ export function useAppStoreImpl() {
       vaaniMessages: [...prev.vaaniMessages, userMsg],
       vaaniHistory: [...prev.vaaniHistory, { role: 'user', content: text }],
       vaaniTextInput: '', vaaniLoading: true, vaaniError: '',
+      // A follow-up must not sit under the previous turn's recommendation —
+      // clear it so the card cannot be mistaken for an answer to the new question.
+      vaaniRecommendation: null, vaaniStreamText: '', vaaniSearching: false,
     }));
     try {
       const system = buildVaaniSystemPrompt({
@@ -436,13 +442,16 @@ export function useAppStoreImpl() {
         riskTier: s.riskTier, enrolledSchemes: s.enrolledSchemes, vaaniQuestionCount: s.vaaniQuestionCount,
       });
       const history = [...s.vaaniHistory, { role: 'user' as const, content: text }];
-      const raw = await completeVaaniTurn(system, history);
+      const raw = await completeVaaniTurn(system, history, {
+        onSearching: () => patch({ vaaniSearching: true }),
+        onText: partial => patch({ vaaniStreamText: partial, vaaniSearching: false }),
+      });
       const parsed = reconcileAction(parseVaaniReply(raw));
       const isFinal = parsed.action !== 'none';
       patch(prev => ({
         vaaniMessages: [...prev.vaaniMessages, { role: 'assistant', hi: parsed.hi, en: parsed.en }],
         vaaniHistory: [...prev.vaaniHistory, { role: 'assistant', content: raw }],
-        vaaniLoading: false,
+        vaaniLoading: false, vaaniStreamText: '', vaaniSearching: false,
         vaaniQuestionCount: isFinal ? prev.vaaniQuestionCount : prev.vaaniQuestionCount + 1,
         vaaniRecommendation: isFinal ? (() => {
           // A follow-up ("what documents do I need?") often drops the SCHEME
@@ -465,7 +474,7 @@ export function useAppStoreImpl() {
       const msg = err instanceof ClaudeApiError ? err.message : t.vaaniGenericError;
       patch(prev => ({
         vaaniMessages: [...prev.vaaniMessages, { role: 'assistant', hi: 'माफ़ कीजिए, कुछ गड़बड़ हुई।', en: msg }],
-        vaaniLoading: false, vaaniError: msg,
+        vaaniLoading: false, vaaniStreamText: '', vaaniSearching: false, vaaniError: msg,
       }));
     }
   };

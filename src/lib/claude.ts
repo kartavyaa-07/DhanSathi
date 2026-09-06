@@ -61,11 +61,13 @@ Never use emojis, emoticons, markdown (no asterisks, underscores, bullets, heade
 Write scheme codes and abbreviations exactly as normal (e.g. "PMSBY", "PM-JAY") — do not add spaces or dashes between their letters yourself; the app already expands them into spelled-out letters for speech.
 Never use financial jargon without a one-line plain explanation in the same sentence.
 
-RESEARCH THE ANSWER — never recommend from memory:
-1. You have a web_search tool and you are expected to use it (2-4 searches) before any final recommendation. Search the open web for what actually fits THIS person: central government schemes, state government schemes for their state and occupation, welfare board and e-Shram linked benefits, insurer/bank/NBFC/post office/mutual fund products — whatever genuinely fits best. You are NOT limited to a fixed list of products.
-2. Ground every number you say in a source you just read: premium, cover, interest rate, tenure, eligibility, age limits, deadlines. If a search does not confirm a number, do not state it — say what you do know instead.
-3. Prefer specific over famous. A state-level or occupation-specific scheme this person actually qualifies for beats a well-known national one they do not.
-4. Do all of this silently. Your reply must be ONLY the lines specified above — no preamble, no "let me check", no summary of what you searched.
+RESEARCH — use the web only when it actually adds something:
+1. You have a web_search tool, limited to ONE search per reply. A search takes about twenty seconds during which the user stares at a blank screen, so spend it only when it changes your answer.
+2. Do NOT search for the DhanSathi-supported products listed further down — their current premium and cover figures are given to you below, so quote those directly and answer immediately.
+3. DO search when the user asks about anything outside that list — a pension, a state or welfare-board scheme, a loan rate, an eligibility rule — because those numbers are not given to you and must not be recalled from memory.
+4. Ground every number you state in either the data given below or the single search you just ran. If neither confirms it, do not state the number — say what you do know instead.
+5. Prefer specific over famous. A state-level or occupation-specific scheme this person actually qualifies for beats a well-known national one they do not.
+6. Do all of this silently. Your reply must be ONLY the lines specified above — no preamble, no "let me check", no summary of what you searched.
 
 USE THIS PERSON'S NUMBERS:
 Income type ${p.incomeTypeId || 'unknown'}; estimated monthly income Rs ${p.monthlyIncome}; monthly expenses Rs ${p.monthlyExpenses}; roughly Rs ${affordability} left over each month; risk profile ${p.riskTier || 'not set'}; existing DhanSathi enrollments: ${enrolled}.
@@ -78,7 +80,7 @@ Always name the organization that actually runs it — the Government of India m
 Then offer help in your own words, in the same breath: you can bring them more details about that scheme and help them register or apply. Close by asking how they would like to proceed.
 NEXT_ACTION and the SCHEME line must both describe the SAME product you just named in Line 1 and Line 2 — never carry over a code from an earlier turn. On a follow-up about a product you already recommended (documents, steps, eligibility), keep that same product and repeat its SCHEME line; only switch products if you say in Line 1 and Line 2 that you are switching.
 These ${JSON.stringify(SCHEMES.map(x => x.id))} are the only products DhanSathi can complete enrollment for inside the app — use the matching enroll_* action for those. For anything else you researched, use explore_scheme and offer to walk them through registering with the provider.
-Reference details for the in-app ones (verify with web_search before quoting, they change): ${JSON.stringify(SCHEMES.map(x => ({ id: x.id, name: x.nameEn, runBy: 'Government of India', premium: x.premiumEn, cover: x.coverEn })))}
+Current figures for the in-app ones — these are accurate, quote them directly and do NOT spend a search on them: ${JSON.stringify(SCHEMES.map(x => ({ id: x.id, name: x.nameEn, runBy: 'Government of India', premium: x.premiumEn, cover: x.coverEn })))}
 Investment options DhanSathi can transact in-app: ${JSON.stringify(INVESTMENTS.map(x => ({ id: x.id, name: x.name, return: x.returnPct, withdraw: x.withdrawBadge })))}
 
 CONVERSATION BUDGET:
@@ -183,7 +185,34 @@ function sleep(ms: number) {
  * Sends the conversation to Claude and returns the raw text reply.
  * Throws ClaudeApiError with a user-facing message on failure.
  */
-export async function completeVaaniTurn(system: string, history: ChatTurn[]): Promise<string> {
+export interface VaaniStreamHandlers {
+  /** Fired when Claude starts a web search, so the UI can say so instead of sitting blank. */
+  onSearching?: () => void;
+  /** Fired as the reply streams in, with the metadata lines stripped out. */
+  onText?: (partial: string) => void;
+}
+
+/** Hides the NEXT_ACTION / SCHEME bookkeeping lines from the live preview. */
+function visibleLines(raw: string): string {
+  return raw
+    .split('\n')
+    .filter(l => !/^\s*[*_]*(NEXT_ACTION|SCHEME)[*_]*\s*:/i.test(l))
+    .join('\n')
+    .trimStart();
+}
+
+/**
+ * Sends the conversation to Claude and returns the raw text reply.
+ * Streams by default: the answer is rendered as it arrives rather than after
+ * the whole turn completes, which is the difference between a visible reply in
+ * a couple of seconds and a blank screen for twenty.
+ * Throws ClaudeApiError with a user-facing message on failure.
+ */
+export async function completeVaaniTurn(
+  system: string,
+  history: ChatTurn[],
+  handlers: VaaniStreamHandlers = {},
+): Promise<string> {
   const apiKey = getApiKey();
   if (!apiKey) {
     throw new ClaudeApiError('No Claude API key set. Add one to .env as VITE_CLAUDE_API_KEY.');
@@ -204,15 +233,18 @@ export async function completeVaaniTurn(system: string, history: ChatTurn[]): Pr
         },
         body: JSON.stringify({
           model: MODEL,
-          max_tokens: 2048,
+          max_tokens: 1024,
           system,
+          stream: true,
           output_config: { effort: 'low' },
-          tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5 }],
+          // A search costs ~20s before a single word is generated, and none of
+          // it can be streamed because no text exists until the search returns.
+          // One lookup is the ceiling; the prompt decides when it is worth it.
+          tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 1 }],
           messages: history.map(h => ({ role: h.role, content: h.content })),
         }),
       });
     } catch (e) {
-      // Network failure — retryable, same backoff as a 5xx.
       lastError = new ClaudeApiError('Network error reaching Claude. Check your connection.');
       if (attempt < MAX_RETRIES) { await sleep(backoffMs(attempt)); continue; }
       throw lastError;
@@ -224,7 +256,6 @@ export async function completeVaaniTurn(system: string, history: ChatTurn[]): Pr
       const err = new ClaudeApiError(`Claude API error (${res.status}): ${detail || res.statusText}`);
       if (RETRYABLE_STATUSES.has(res.status) && attempt < MAX_RETRIES) {
         lastError = err;
-        // Honor Retry-After if Anthropic sent one, otherwise exponential backoff.
         const retryAfter = Number(res.headers.get('retry-after'));
         await sleep(retryAfter > 0 ? retryAfter * 1000 : backoffMs(attempt));
         continue;
@@ -232,20 +263,66 @@ export async function completeVaaniTurn(system: string, history: ChatTurn[]): Pr
       throw err;
     }
 
-    const data = await res.json();
-    if (data.stop_reason === 'refusal') {
-      throw new ClaudeApiError('Vaani declined to answer that. Please rephrase.');
-    }
-    // When web_search runs, the response can contain text blocks *before*
-    // the search (e.g. stray "let me check" text) as well as the real
-    // 3-line answer after — take the last text block, which is always the
-    // model's final response once any tool use is done.
-    const textBlocks = (data.content || []).filter((b: any) => b.type === 'text');
-    const textBlock = textBlocks[textBlocks.length - 1];
-    return textBlock?.text || '...';
+    return await readVaaniStream(res, handlers);
   }
 
   throw lastError ?? new ClaudeApiError('Claude API request failed after retries.');
+}
+
+/**
+ * Consumes the SSE stream, accumulating one buffer per content block. A turn
+ * that uses web_search can emit text before the search as well as after, so
+ * the answer is the LAST text block — the same rule the non-streaming path used.
+ */
+async function readVaaniStream(res: Response, handlers: VaaniStreamHandlers): Promise<string> {
+  const body = res.body;
+  if (!body) throw new ClaudeApiError('Claude returned an empty response.');
+
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  const blocks: Array<{ type: string; text: string }> = [];
+  let buffer = '';
+  let refused = false;
+
+  const lastText = () => {
+    for (let i = blocks.length - 1; i >= 0; i--) if (blocks[i].type === 'text') return blocks[i].text;
+    return '';
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === '[DONE]') continue;
+
+      let evt: any;
+      try { evt = JSON.parse(payload); } catch { continue; }
+
+      if (evt.type === 'content_block_start') {
+        const type = evt.content_block?.type || 'unknown';
+        blocks[evt.index] = { type, text: '' };
+        if (type === 'server_tool_use') handlers.onSearching?.();
+      } else if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+        const block = blocks[evt.index] || (blocks[evt.index] = { type: 'text', text: '' });
+        block.text += evt.delta.text;
+        if (block.type === 'text') handlers.onText?.(visibleLines(lastText()));
+      } else if (evt.type === 'message_delta' && evt.delta?.stop_reason === 'refusal') {
+        refused = true;
+      } else if (evt.type === 'error') {
+        throw new ClaudeApiError(evt.error?.message || 'Claude stream error.');
+      }
+    }
+  }
+
+  if (refused) throw new ClaudeApiError('Vaani declined to answer that. Please rephrase.');
+  return lastText() || '...';
 }
 
 function backoffMs(attempt: number): number {
