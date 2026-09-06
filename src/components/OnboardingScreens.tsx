@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../store';
 import { C, jakarta, work, devanagari, primaryOrDisabled } from '../ui';
-import { INCOME_TYPES } from '../data';
+import { INCOME_TYPES, PROVIDERS } from '../data';
 import { INCOME_ICONS, IconCheck, IconBack, Logo } from './Icons';
 
 export function SplashScreen() {
-  const { actions } = useAppStore();
+  const { actions, derived } = useAppStore();
+  const { t } = derived;
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const show = setTimeout(() => setVisible(true), 30);
@@ -17,7 +18,7 @@ export function SplashScreen() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: `linear-gradient(180deg,${C.bg} 0%,#E6EEE9 100%)`, opacity: visible ? 1 : 0, transition: 'opacity 0.6s ease' }}>
       <Logo size={88} />
       <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 30, color: C.ink }}>DhanSathi</span>
-      <span style={{ fontFamily: work, fontWeight: 500, fontSize: 15, color: C.inkSoft, textAlign: 'center' }}>Your money, made simple.</span>
+      <span style={{ fontFamily: work, fontWeight: 500, fontSize: 15, color: C.inkSoft, textAlign: 'center' }}>{t.splashTagline}</span>
     </div>
   );
 }
@@ -30,6 +31,7 @@ export function LangScreen() {
         <Logo size={88} />
         <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 30, color: C.ink }}>DhanSathi</span>
         <span style={{ fontFamily: work, fontWeight: 500, fontSize: 15, color: C.inkSoft, textAlign: 'center' }}>Your financial companion, in your language.</span>
+        <span style={{ fontFamily: devanagari, fontWeight: 500, fontSize: 15, color: C.inkSoft, textAlign: 'center' }}>आपकी भाषा में, आपका वित्तीय साथी।</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
         <button onClick={() => actions.onChooseLang('hi')} style={{ height: 60, borderRadius: 12, border: 'none', background: C.green, color: '#fff', fontFamily: devanagari, fontWeight: 700, fontSize: 19, cursor: 'pointer' }}>हिंदी में जारी रखें</button>
@@ -109,7 +111,9 @@ export function OtpScreen() {
       <div style={{ fontFamily: font, fontSize: 13, color: C.inkSoft }}>
         {t.didntReceiveCode}{' '}
         {s.otpResendSeconds > 0
-          ? <span style={{ color: C.inkFaint }}>{t.resendIn} 00:{String(s.otpResendSeconds).padStart(2, '0')}</span>
+          ? <span style={{ color: C.inkFaint }}>{s.lang === 'hi'
+              ? `00:${String(s.otpResendSeconds).padStart(2, '0')} ${t.resendIn}`
+              : `${t.resendIn} 00:${String(s.otpResendSeconds).padStart(2, '0')}`}</span>
           : <button onClick={actions.onResendOtp} style={{ border: 'none', background: 'transparent', color: C.green, fontFamily: font, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>{t.getOtp}</button>}
       </div>
       <div style={{ flex: 1 }} />
@@ -185,7 +189,7 @@ function OnboardingStepper({ current }: { current: number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: font, fontWeight: 600, fontSize: 13, color: C.ink }}>{t.step} {current} {t.of} {PROFILE_SETUP_TOTAL_STEPS}</span>
+        <span style={{ fontFamily: font, fontWeight: 600, fontSize: 13, color: C.ink }}>{t.step} {derived.ofLabel(current, PROFILE_SETUP_TOTAL_STEPS)}</span>
         <span style={{ fontFamily: font, fontSize: 12, color: C.inkFaint }}>{t.profileSetup}</span>
       </div>
       <div style={{ height: 6, borderRadius: 9999, background: C.border, overflow: 'hidden' }}>
@@ -267,7 +271,6 @@ export function AAScreen() {
   const { s, actions, derived } = useAppStore();
   const { t } = derived;
   const font = s.lang === 'hi' ? devanagari : work;
-  const PROVIDERS = ['State Bank of India', 'HDFC Bank', 'ICICI Bank', 'Other Bank'];
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 20px 24px 20px', gap: 18 }}>
       <OnboardingStepper current={5} />
@@ -288,7 +291,7 @@ export function AAScreen() {
           <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 20, color: C.ink }}>{t.chooseBank}</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {PROVIDERS.map(p => (
-              <button key={p} onClick={actions.onSelectProvider} style={{ height: 56, borderRadius: 12, border: `1px solid ${C.borderStrong}`, background: '#fff', display: 'flex', alignItems: 'center', padding: '0 16px', fontFamily: work, fontWeight: 600, fontSize: 15, color: C.ink, cursor: 'pointer' }}>{p}</button>
+              <button key={p.en} onClick={actions.onSelectProvider} style={{ height: 56, borderRadius: 12, border: `1px solid ${C.borderStrong}`, background: '#fff', display: 'flex', alignItems: 'center', padding: '0 16px', fontFamily: work, fontWeight: 600, fontSize: 15, color: C.ink, cursor: 'pointer' }}>{derived.L(p.en, p.hi)}</button>
             ))}
           </div>
         </>
@@ -313,13 +316,13 @@ export function AAScreen() {
 
 export function QuizScreen() {
   const { s, actions, derived } = useAppStore();
-  const { currentQuestion, quizProgress } = derived;
+  const { t, currentQuestion, quizProgress } = derived;
   const font = s.lang === 'hi' ? devanagari : work;
   const total = 5;
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 20px 24px 20px', gap: 20 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <span style={{ fontFamily: work, fontWeight: 600, fontSize: 13, color: C.green }}>{`Question ${quizProgress + 1} of ${total}`}</span>
+        <span style={{ fontFamily: work, fontWeight: 600, fontSize: 13, color: C.green }}>{`${t.question} ${derived.ofLabel(quizProgress + 1, total)}`}</span>
         <div style={{ height: 6, borderRadius: 9999, background: C.border, overflow: 'hidden' }}>
           <div style={{ height: '100%', borderRadius: 9999, background: C.green, width: `${((quizProgress + 1) / total) * 100}%`, transition: 'width 0.4s ease' }} />
         </div>
@@ -351,7 +354,7 @@ export function QuizResultScreen() {
       <span style={{ fontFamily: font, fontSize: 14, color: C.inkSoft }}>{t.riskDoneSubtext}</span>
       <div style={{ height: 1, width: 40, background: C.border, margin: '8px 0' }} />
       <span style={{ fontFamily: work, fontSize: 13, color: C.inkFaint, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t.yourRiskProfile}</span>
-      <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 30, color: C.green }}>{s.riskTier}</span>
+      <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 30, color: C.green }}>{derived.riskTierLabel}</span>
       <span style={{ fontFamily: font, fontSize: 15, lineHeight: '22px', color: C.inkSoft, maxWidth: 320 }}>{riskTierDescription}</span>
       <button onClick={actions.onContinueToDashboard} style={{ ...primaryOrDisabled(true), marginTop: 16 }}>{t.goToDashboard}</button>
     </div>

@@ -50,40 +50,89 @@ export function buildVaaniSystemPrompt(p: VaaniProfile): string {
   const enrolled = p.enrolledSchemes.length ? p.enrolledSchemes.join(', ') : 'none yet';
   const affordability = Math.max(p.monthlyIncome - p.monthlyExpenses, 0);
   return `You are Vaani, a warm, patient Hindi-first AI financial companion inside the DhanSathi app for Indian gig/informal workers.
-Reply in EXACTLY this format, three lines, nothing else:
-Line 1: a short Hindi sentence in Devanagari script (under 25 words).
-Line 2: its natural English paraphrase (under 25 words).
-Line 3: exactly "NEXT_ACTION: <code>" where <code> is one of: enroll_pmsby, enroll_pmjjby, enroll_pmjay, enroll_hospicash, invest, borrow_compare, none.
+
+OUTPUT FORMAT — reply with these lines and nothing else:
+Line 1: a short Hindi sentence in Devanagari script (under 25 words; up to 35 words only for your final recommendation).
+Line 2: its natural English paraphrase (same length rule).
+Line 3: exactly "NEXT_ACTION: <code>" where <code> is one of: ${VALID_ACTIONS.join(', ')}.
+Line 4 (ONLY when NEXT_ACTION is not "none"): exactly "SCHEME: <product name> | <organization that runs it> | <official URL>". Use "-" for a field you genuinely could not verify.
 Lines 1 and 2 are spoken aloud by text-to-speech, so write them the way a person would say them out loud: plain sentences only.
 Never use emojis, emoticons, markdown (no asterisks, underscores, bullets, headers), or special symbols — they get read aloud as gibberish.
 Write scheme codes and abbreviations exactly as normal (e.g. "PMSBY", "PM-JAY") — do not add spaces or dashes between their letters yourself; the app already expands them into spelled-out letters for speech.
 Never use financial jargon without a one-line plain explanation in the same sentence.
 
-DO A LITTLE RESEARCH BEFORE YOU ANSWER — do not give the same generic answer to every user:
-1. Actually work with this specific person's numbers before recommending anything: their exact monthly income (₹${p.monthlyIncome}), expenses (₹${p.monthlyExpenses}), what's left over (₹${affordability}/month), their risk tier, and whatever amount/duration/goal they just told you in this conversation. Your final recommendation must reference at least one number specific to *them* — e.g. how a scheme's premium compares to their leftover ₹${affordability}, or the exact interest they'd pay on the amount they asked about — never a canned description that would read the same for any user.
-2. You have a web_search tool. Use it — briefly, 1-2 searches at most — whenever you're not fully confident a number is current: a scheme's premium/coverage amount, an interest rate, or an eligibility rule. Search, read the result, then answer with the verified number. Do this silently — your reply must be ONLY the 3 lines specified above, nothing before them and nothing after. Do not add a confirmation note, a "found it" line, or any text summarizing what you searched for, even after using the tool — put that reasoning in your thinking, not in the reply.
-3. Two users with the same income type but different amounts, existing enrollments, or stated needs should get visibly different recommendations. If your answer would fit almost any user in this income bracket, it's too generic — go back and use their specific numbers or search for the specific fact you're missing.
+RESEARCH THE ANSWER — never recommend from memory:
+1. You have a web_search tool and you are expected to use it (2-4 searches) before any final recommendation. Search the open web for what actually fits THIS person: central government schemes, state government schemes for their state and occupation, welfare board and e-Shram linked benefits, insurer/bank/NBFC/post office/mutual fund products — whatever genuinely fits best. You are NOT limited to a fixed list of products.
+2. Ground every number you say in a source you just read: premium, cover, interest rate, tenure, eligibility, age limits, deadlines. If a search does not confirm a number, do not state it — say what you do know instead.
+3. Prefer specific over famous. A state-level or occupation-specific scheme this person actually qualifies for beats a well-known national one they do not.
+4. Do all of this silently. Your reply must be ONLY the lines specified above — no preamble, no "let me check", no summary of what you searched.
 
-User profile: income type ${p.incomeTypeId || 'unknown'}, estimated monthly income ₹${p.monthlyIncome}, monthly expenses ₹${p.monthlyExpenses}, risk profile ${p.riskTier || 'not set'}, existing DhanSathi enrollments: ${enrolled}.
-Only recommend from this exact list of DhanSathi-supported products, never invent products — but you may use web_search to verify or refresh the numbers below before quoting them: ${JSON.stringify(SCHEMES.map(x => ({ id: x.id, name: x.nameEn, premium: x.premiumEn, cover: x.coverEn })))}
-Investment options: ${JSON.stringify(INVESTMENTS.map(x => ({ id: x.id, name: x.name, return: x.returnPct, withdraw: x.withdrawBadge })))}
-Never recommend a lock-in investment product to a Conservative-tier user.
-You have asked ${p.vaaniQuestionCount} question(s) so far in this session. Ask at most 5 total before giving ONE specific final recommendation. If you have already asked 5, you MUST give a final recommendation now (NEXT_ACTION must not be "none").
-Only ask about information not already given above. When you give your final recommendation, state the concrete cost and benefit numbers in Line 1/2, computed for this person, not a generic figure.`;
+USE THIS PERSON'S NUMBERS:
+Income type ${p.incomeTypeId || 'unknown'}; estimated monthly income Rs ${p.monthlyIncome}; monthly expenses Rs ${p.monthlyExpenses}; roughly Rs ${affordability} left over each month; risk profile ${p.riskTier || 'not set'}; existing DhanSathi enrollments: ${enrolled}.
+Your final recommendation must reference at least one number specific to them — how a premium compares with their Rs ${affordability} monthly surplus, the exact interest on the amount they asked about, and so on. If your answer would read the same for any user in this income bracket, it is too generic: search again for the specific fact you are missing.
+Never recommend a product with a lock-in to a Conservative-tier user.
+
+HOW TO PRESENT A RECOMMENDATION — this is a hard rule:
+DhanSathi is a guide, not the provider. Never say or imply that DhanSathi runs, offers, funds, underwrites or owns any scheme.
+Always name the organization that actually runs it — the Government of India ministry, the state government, the insurer, the bank, the fund house — in Line 1 and Line 2. For example: "This is run by LIC under the central government's PMJJBY."
+Then offer help in your own words, in the same breath: you can bring them more details about that scheme and help them register or apply. Close by asking how they would like to proceed.
+NEXT_ACTION and the SCHEME line must both describe the SAME product you just named in Line 1 and Line 2 — never carry over a code from an earlier turn. On a follow-up about a product you already recommended (documents, steps, eligibility), keep that same product and repeat its SCHEME line; only switch products if you say in Line 1 and Line 2 that you are switching.
+These ${JSON.stringify(SCHEMES.map(x => x.id))} are the only products DhanSathi can complete enrollment for inside the app — use the matching enroll_* action for those. For anything else you researched, use explore_scheme and offer to walk them through registering with the provider.
+Reference details for the in-app ones (verify with web_search before quoting, they change): ${JSON.stringify(SCHEMES.map(x => ({ id: x.id, name: x.nameEn, runBy: 'Government of India', premium: x.premiumEn, cover: x.coverEn })))}
+Investment options DhanSathi can transact in-app: ${JSON.stringify(INVESTMENTS.map(x => ({ id: x.id, name: x.name, return: x.returnPct, withdraw: x.withdrawBadge })))}
+
+CONVERSATION BUDGET:
+You have asked ${p.vaaniQuestionCount} question(s) so far. Ask at most 5 short questions total, then give ONE specific final recommendation (NEXT_ACTION must not be "none"). Only ask about things not already known above.`;
 }
 
 export interface ChatTurn { role: 'user' | 'assistant'; content: string }
 
-export interface VaaniParsed { hi: string; en: string; action: string }
+export interface VaaniParsed {
+  hi: string;
+  en: string;
+  action: string;
+  /** Researched product name, the organization that runs it, and its official page. */
+  schemeName: string;
+  provider: string;
+  url: string;
+}
 
-const VALID_ACTIONS = ['enroll_pmsby', 'enroll_pmjjby', 'enroll_pmjay', 'enroll_hospicash', 'invest', 'borrow_compare', 'none'];
+// 'explore_scheme' is the open-ended one: a product Vaani found by researching
+// the web that DhanSathi cannot enroll into directly. The enroll_* codes stay
+// reserved for the four schemes the app completes in-app.
+const VALID_ACTIONS = ['enroll_pmsby', 'enroll_pmjjby', 'enroll_pmjay', 'enroll_hospicash', 'explore_scheme', 'invest', 'borrow_compare', 'none'];
+
+function safeUrl(raw: string): string {
+  const cleaned = raw.trim().replace(/^[<(\[]|[>)\].,]$/g, '');
+  if (!cleaned || cleaned === '-') return '';
+  try {
+    const u = new URL(cleaned.startsWith('http') ? cleaned : `https://${cleaned}`);
+    return u.protocol === 'https:' || u.protocol === 'http:' ? u.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
+function parseSchemeLine(raw: string): { schemeName: string; provider: string; url: string } {
+  // Anchored to the start of a line and requiring the colon: the English
+  // paraphrase often contains the word "scheme" in prose, and a loose match
+  // happily grabbed the rest of that sentence as the product name.
+  const m = raw.match(/^\s*[*_]*SCHEME[*_]*\s*:\s*(.+)$/im);
+  if (!m) return { schemeName: '', provider: '', url: '' };
+  const parts = m[1].split('|').map(x => x.trim().replace(/[*_`]/g, ''));
+  const clean = (v: string | undefined) => (!v || v === '-' ? '' : v);
+  return { schemeName: clean(parts[0]), provider: clean(parts[1]), url: safeUrl(parts[2] || '') };
+}
+
+
 
 export function parseVaaniReply(raw: string): VaaniParsed {
   const lines = raw.trim().split('\n').map(l => l.trim()).filter(Boolean);
   let action = 'none';
-  const m = raw.match(/NEXT_ACTION\s*:?\s*[*_]*\s*(\w+)/i);
+  const m = raw.match(/NEXT_ACTION[*_]*\s*:?\s*[*_]*\s*(\w+)/i);
   if (m && VALID_ACTIONS.includes(m[1].toLowerCase())) action = m[1].toLowerCase();
-  const others = lines.filter(l => !/NEXT_ACTION/i.test(l));
+  const scheme = parseSchemeLine(raw);
+  const others = lines.filter(l => !/NEXT_ACTION/i.test(l) && !/^SCHEME\s*:/i.test(l));
   // Take the LAST two non-NEXT_ACTION lines, not the first two. When Vaani
   // uses web_search it occasionally slips in a stray note ("Confirmed ₹20/yr")
   // before its real 3-line answer despite instructions not to — the actual
@@ -92,7 +141,29 @@ export function parseVaaniReply(raw: string): VaaniParsed {
   // of mis-assigning it as the Hindi line.
   const en = others[others.length - 1] || '';
   const hi = others.length >= 2 ? others[others.length - 2] : others[0] || '...';
-  return { hi, en, action };
+  return { hi, en, action, ...scheme };
+}
+
+// The enroll_* actions drop the user straight into an in-app enrollment, so
+// they must match the scheme the reply actually talks about. Vaani sometimes
+// answers about a researched product (say Atal Pension Yojana) while emitting a
+// leftover enroll_* code from earlier in the conversation — that would offer a
+// button for a completely different scheme. When the reply does not mention the
+// scheme its action points at, demote it to explore_scheme, which is always
+// truthful: read the provider's page, or ask Vaani to walk you through it.
+const ENROLL_ALIASES: Record<string, string[]> = {
+  enroll_pmsby: ['pmsby', 'suraksha bima', 'सुरक्षा बीमा', 'पीएमएसबीवाई'],
+  enroll_pmjjby: ['pmjjby', 'jeevan jyoti', 'जीवन ज्योति', 'पीएमजेजेबीवाई'],
+  enroll_pmjay: ['pm-jay', 'pmjay', 'ayushman', 'आयुष्मान'],
+  enroll_hospicash: ['hospi', 'हॉस्पि'],
+};
+
+export function reconcileAction(parsed: VaaniParsed): VaaniParsed {
+  const aliases = ENROLL_ALIASES[parsed.action];
+  if (!aliases) return parsed;
+  const haystack = `${parsed.hi} ${parsed.en} ${parsed.schemeName}`.toLowerCase();
+  if (aliases.some(a => haystack.includes(a))) return parsed;
+  return { ...parsed, action: 'explore_scheme' };
 }
 
 export class ClaudeApiError extends Error {}
@@ -133,10 +204,10 @@ export async function completeVaaniTurn(system: string, history: ChatTurn[]): Pr
         },
         body: JSON.stringify({
           model: MODEL,
-          max_tokens: 1024,
+          max_tokens: 2048,
           system,
           output_config: { effort: 'low' },
-          tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 2 }],
+          tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5 }],
           messages: history.map(h => ({ role: h.role, content: h.content })),
         }),
       });

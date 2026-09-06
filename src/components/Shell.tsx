@@ -14,25 +14,21 @@ function useIsDesktop(): boolean {
 }
 
 const MAIN_HEADER_SCREENS: Screen[] = ['dashboard', 'insurance', 'investlist', 'borrow'];
-const SUB_HEADER_SCREENS: Screen[] = ['income', 'antiscam', 'aa', 'quiz', 'quizresult', 'insurancedetail', 'enrollsuccess', 'investdetail', 'borrowcompare', 'profile'];
+const SUB_HEADER_SCREENS: Screen[] = ['income', 'antiscam', 'aa', 'quiz', 'quizresult', 'insurancedetail', 'enrollsuccess', 'investdetail', 'borrowcompare', 'profile', 'tracker', 'editprofile'];
 const BOTTOM_NAV_SCREENS: Screen[] = ['dashboard', 'insurance', 'investlist', 'borrow'];
 const FAB_SCREENS: Screen[] = ['dashboard', 'insurance', 'investlist'];
 const NO_SIDEBAR_SCREENS: Screen[] = ['splash', 'lang', 'phoneauth', 'otp', 'profiledetails', 'income', 'antiscam', 'aa', 'quiz', 'quizresult'];
 
-function headerTitleFor(screen: Screen, t: any): string {
+function headerTitleFor(screen: Screen, t: any, trackerKind: 'income' | 'expense'): string {
   const map: Partial<Record<Screen, string>> = {
-    income: t.incomeTitle, antiscam: 'DhanSathi', aa: t.aaTitle, quiz: 'Quick Profile', quizresult: t.yourRiskProfile,
-    insurancedetail: 'Scheme Details', enrollsuccess: t.enrolledSuccess, investdetail: 'Invest', borrowcompare: t.costComparison, profile: 'Profile',
+    income: t.incomeTitle, antiscam: 'DhanSathi', aa: t.aaTitle, quiz: t.headerQuickProfile, quizresult: t.yourRiskProfile,
+    insurancedetail: t.headerSchemeDetails, enrollsuccess: t.enrolledSuccess, investdetail: t.headerInvest,
+    borrowcompare: t.costComparison, profile: t.headerProfile, editprofile: t.personalDetails,
+    tracker: '',
   };
+  if (screen === 'tracker') return trackerKind === 'income' ? t.addIncomeTitle : t.addExpenseTitle;
   return map[screen] || 'DhanSathi';
 }
-
-const NAV_TABS = [
-  { key: 'dashboard', label: 'Home', Icon: IconHome },
-  { key: 'insurance', label: 'Bima', Icon: IconShield },
-  { key: 'invest', label: 'Bachat', Icon: IconWallet },
-  { key: 'borrow', label: 'Udhaar', Icon: IconExchange },
-];
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const isDesktop = useIsDesktop();
@@ -43,7 +39,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const hasSubHeader = SUB_HEADER_SCREENS.includes(s.screen);
   const showBottomNav = BOTTOM_NAV_SCREENS.includes(s.screen);
   const showFab = FAB_SCREENS.includes(s.screen);
-  const showBack = !!({ income: 1, antiscam: 1, aa: 1, quiz: 1, insurancedetail: 1, investdetail: 1, borrowcompare: 1, profile: 1 } as any)[s.screen];
+  const navTabs = [
+    { key: 'dashboard', label: t.navHome, Icon: IconHome },
+    { key: 'insurance', label: t.navBima, Icon: IconShield },
+    { key: 'invest', label: t.navBachat, Icon: IconWallet },
+    { key: 'borrow', label: t.navUdhaar, Icon: IconExchange },
+  ];
+
+  const showBack = !!({ income: 1, antiscam: 1, aa: 1, quiz: 1, insurancedetail: 1, investdetail: 1, borrowcompare: 1, profile: 1, tracker: 1, editprofile: 1 } as any)[s.screen];
 
   const phoneCard = (
     <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', background: C.bg, fontFamily: work }}>
@@ -66,7 +69,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 <IconBack />
               </button>
             )}
-            <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 18, color: C.ink, flex: 1 }}>{headerTitleFor(s.screen, t)}</span>
+            <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 18, color: C.ink, flex: 1 }}>{headerTitleFor(s.screen, t, s.trackerKind)}</span>
           </div>
         )}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>{children}</div>
@@ -74,7 +77,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       {showBottomNav && (
         <div style={{ flexShrink: 0, background: '#fff', borderTop: `1px solid ${C.borderStrong}`, boxShadow: '0 -4px 12px rgba(0,0,0,0.05)', display: 'flex', padding: '8px 8px calc(env(safe-area-inset-bottom,0px) + 8px) 8px' }}>
-          {NAV_TABS.map(nt => {
+          {navTabs.map(nt => {
             const active = derived.tabActive(nt.key, s.screen);
             const color = active ? C.green : C.inkFaint;
             return (
@@ -86,6 +89,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </button>
             );
           })}
+        </div>
+      )}
+
+      {!!s.toastMessage && (
+        <div style={{ position: 'absolute', left: 20, right: 20, bottom: showBottomNav ? 92 : 24, zIndex: 20, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+          <span style={{ background: C.sidebarBg, color: '#fff', borderRadius: 9999, padding: '10px 18px', fontFamily: work, fontWeight: 600, fontSize: 13, boxShadow: '0 8px 20px rgba(0,0,0,0.25)', textAlign: 'center' }}>
+            {s.toastMessage}
+          </span>
         </div>
       )}
 
@@ -103,11 +114,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   const showSidebar = !NO_SIDEBAR_SCREENS.includes(s.screen);
   const sidebarNavItems = [
-    { key: 'dashboard', label: 'Home', Icon: IconHome, active: s.screen === 'dashboard', onClick: () => actions.onOpenTab('dashboard') },
-    { key: 'insurance', label: 'Bima', Icon: IconShield, active: derived.tabActive('insurance', s.screen), onClick: () => actions.onOpenTab('insurance') },
-    { key: 'invest', label: 'Bachat', Icon: IconWallet, active: derived.tabActive('invest', s.screen), onClick: () => actions.onOpenTab('invest') },
-    { key: 'borrow', label: 'Udhaar', Icon: IconExchange, active: derived.tabActive('borrow', s.screen), onClick: () => actions.onOpenTab('borrow') },
-    { key: 'profile', label: 'Profile', Icon: IconProfile, active: s.screen === 'profile', onClick: actions.onOpenProfile },
+    { key: 'dashboard', label: t.navHome, Icon: IconHome, active: s.screen === 'dashboard', onClick: () => actions.onOpenTab('dashboard') },
+    { key: 'insurance', label: t.navBima, Icon: IconShield, active: derived.tabActive('insurance', s.screen), onClick: () => actions.onOpenTab('insurance') },
+    { key: 'invest', label: t.navBachat, Icon: IconWallet, active: derived.tabActive('invest', s.screen), onClick: () => actions.onOpenTab('invest') },
+    { key: 'borrow', label: t.navUdhaar, Icon: IconExchange, active: derived.tabActive('borrow', s.screen), onClick: () => actions.onOpenTab('borrow') },
+    { key: 'profile', label: t.navProfile, Icon: IconProfile, active: s.screen === 'profile', onClick: actions.onOpenProfile },
   ];
 
   return (
@@ -131,7 +142,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           })}
           <div style={{ flex: 1 }} />
           <button onClick={actions.onOpenGeneralVaani} style={{ height: 46, borderRadius: 10, border: 'none', background: C.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', fontFamily: work, fontWeight: 700, fontSize: 13 }}>
-            <IconMic size={16} /> Ask Vaani
+            <IconMic size={16} /> {t.askVaani}
           </button>
           <button onClick={actions.onToggleLanguage} style={{ height: 40, borderRadius: 9999, border: '1px solid #565E74', background: 'transparent', color: C.sidebarInk, fontFamily: work, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
             {s.lang === 'hi' ? 'हि | EN' : 'EN | हि'}

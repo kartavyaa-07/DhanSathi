@@ -25,8 +25,12 @@ export const C = {
   dangerBg: '#FFDAD6',
 };
 
-export const jakarta = "'Plus Jakarta Sans', sans-serif";
-export const work = "'Work Sans', sans-serif";
+// Work Sans and Plus Jakarta Sans carry no Devanagari glyphs, so Noto Sans
+// Devanagari is listed straight after them: the browser falls back per
+// character, and Hindi text renders in the proper face everywhere without
+// every call site having to branch on the current language.
+export const jakarta = "'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif";
+export const work = "'Work Sans', 'Noto Sans Devanagari', sans-serif";
 export const devanagari = "'Noto Sans Devanagari', sans-serif";
 
 export const primaryButtonStyle: CSSProperties = {

@@ -8,6 +8,8 @@ import { VaaniScreen } from './components/VaaniScreen';
 import { InvestListScreen, InvestDetailScreen } from './components/InvestScreens';
 import { BorrowScreen, BorrowCompareScreen } from './components/BorrowScreens';
 import { ProfileScreen } from './components/ProfileScreen';
+import { TrackerScreen } from './components/TrackerScreen';
+import { ProfileEditScreen } from './components/ProfileEditScreen';
 
 const SCREEN_COMPONENTS: Record<Screen, React.FC> = {
   splash: SplashScreen,
@@ -30,6 +32,8 @@ const SCREEN_COMPONENTS: Record<Screen, React.FC> = {
   borrow: BorrowScreen,
   borrowcompare: BorrowCompareScreen,
   profile: ProfileScreen,
+  tracker: TrackerScreen,
+  editprofile: ProfileEditScreen,
 };
 
 function ScreenRouter() {

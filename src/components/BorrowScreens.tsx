@@ -19,8 +19,10 @@ export function BorrowScreen() {
             <img src="/assets/loan-icon.png" alt="Borrow" width={48} height={48} style={{ objectFit: 'contain' }} />
           </div>
         </div>
-        <span style={{ fontFamily: devanagari, fontWeight: 600, fontSize: 18, color: C.ink }}>कितने रुपये चाहिए और कितने समय के लिए?</span>
-        <span style={{ fontFamily: work, fontSize: 14, color: C.inkSoft }}>{t.borrowingQuestion}</span>
+        <span style={{ fontFamily: s.lang === 'hi' ? devanagari : work, fontWeight: 600, fontSize: 18, color: C.ink, textAlign: 'center' }}>{t.borrowingQuestion}</span>
+        {s.lang === 'en' && (
+          <span style={{ fontFamily: devanagari, fontSize: 14, color: C.inkSoft, textAlign: 'center' }}>कितने रुपये चाहिए और कितने समय के लिए?</span>
+        )}
       </div>
       <div style={{ flex: 1, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <input type="number" placeholder={t.amountPlaceholder} value={s.borrowAmount} onChange={e => actions.onChangeBorrowAmount(e.target.value)} style={{ height: 56, borderRadius: 12, border: `2px solid ${C.borderStrong}`, padding: '0 16px', fontFamily: work, fontSize: 16, color: C.ink }} />
@@ -37,13 +39,13 @@ export function BorrowScreen() {
 export function BorrowCompareScreen() {
   const { s, actions, derived } = useAppStore();
   const { t, moneylenderInterest, mudraInterest, borrowSavings, fmt } = derived;
-  const savingsSufficient = (parseInt(s.borrowAmount, 10) || 0) > 0 && (parseInt(s.borrowAmount, 10) || 0) <= s.savingsBalance;
+  const savingsSufficient = (parseInt(s.borrowAmount, 10) || 0) > 0 && (parseInt(s.borrowAmount, 10) || 0) <= derived.availableBalance;
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 18, padding: '20px 20px 24px 20px' }}>
       {savingsSufficient && (
         <div style={{ borderRadius: 12, background: C.greenBg, border: `1px solid ${C.greenLight}`, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ fontFamily: work, fontWeight: 700, fontSize: 14, color: C.greenDark }}>{t.useSavingsTitle}</span>
-          <span style={{ fontFamily: work, fontSize: 13, color: C.inkSoft }}>{t.useSavingsBody} ₹{fmt(s.savingsBalance)}.</span>
+          <span style={{ fontFamily: work, fontSize: 13, color: C.inkSoft }}>{t.useSavingsBody} ₹{fmt(derived.availableBalance)}.</span>
           <button onClick={actions.onUseSavings} style={{ height: 44, borderRadius: 9999, border: 'none', background: C.green, color: '#fff', fontFamily: work, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>{t.useSavingsCta}</button>
         </div>
       )}

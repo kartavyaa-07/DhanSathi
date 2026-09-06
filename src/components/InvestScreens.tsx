@@ -6,7 +6,7 @@ import { IconSearch, IconSort, IconCheck } from './Icons';
 
 export function InvestListScreen() {
   const { s, actions, derived } = useAppStore();
-  const { t, investmentProductsList } = derived;
+  const { t, L, investmentProductsList } = derived;
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 18, padding: '16px 20px 110px 20px' }}>
       <div style={{ display: 'flex', gap: 8 }}>
@@ -22,12 +22,12 @@ export function InvestListScreen() {
         {INVEST_CATEGORIES.map(cat => {
           const active = s.investCategory === cat.key;
           return (
-            <button key={cat.key} onClick={() => actions.onSelectInvestCategory(cat.key)} style={{ height: 36, padding: '0 16px', borderRadius: 9999, border: `1px solid ${active ? C.green : C.borderStrong}`, background: active ? C.green : '#fff', color: active ? '#fff' : C.ink, fontFamily: work, fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>{cat.label}</button>
+            <button key={cat.key} onClick={() => actions.onSelectInvestCategory(cat.key)} style={{ height: 36, padding: '0 16px', borderRadius: 9999, border: `1px solid ${active ? C.green : C.borderStrong}`, background: active ? C.green : '#fff', color: active ? '#fff' : C.ink, fontFamily: work, fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>{L(cat.label, cat.labelHi)}</button>
           );
         })}
       </div>
       <div style={{ borderRadius: 9999, background: C.greenBg, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontFamily: work, fontWeight: 600, fontSize: 13, color: C.greenDark }}>{t.yourProfile}: {s.riskTier || 'Conservative'} — {t.liquidOptionsShown}</span>
+        <span style={{ fontFamily: work, fontWeight: 600, fontSize: 13, color: C.greenDark }}>{t.yourProfile}: {derived.riskTierLabel === '—' ? t.riskConservative : derived.riskTierLabel} — {t.liquidOptionsShown}</span>
       </div>
       {investmentProductsList.length === 0 && (
         <span style={{ fontFamily: work, fontSize: 14, color: C.inkFaint, textAlign: 'center', padding: '20px 0' }}>{t.noInvestmentsFound}</span>
@@ -35,11 +35,11 @@ export function InvestListScreen() {
       {investmentProductsList.map(p => (
         <div key={p.id} onClick={() => actions.onOpenProduct(p.id)} style={{ ...cardStyle, padding: 16, display: 'flex', flexDirection: 'column', gap: 8, cursor: 'pointer' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontFamily: work, fontWeight: 600, fontSize: 15, color: C.ink }}>{p.name}</span>
-            <span style={{ display: 'inline-block', fontFamily: work, fontWeight: 600, fontSize: 11, color: C.greenDark, background: C.greenBg, borderRadius: 9999, padding: '3px 10px' }}>{p.withdrawBadge}</span>
+            <span style={{ fontFamily: work, fontWeight: 600, fontSize: 15, color: C.ink }}>{L(p.name, p.nameHi)}</span>
+            <span style={{ display: 'inline-block', fontFamily: work, fontWeight: 600, fontSize: 11, color: C.greenDark, background: C.greenBg, borderRadius: 9999, padding: '3px 10px' }}>{L(p.withdrawBadge, p.withdrawBadgeHi)}</span>
           </div>
           <span style={{ fontFamily: jakarta, fontWeight: 800, fontSize: 30, color: C.green }}>{p.returnPct}<span style={{ fontSize: 14, fontWeight: 600, color: C.inkFaint }}> {t.annualReturn}</span></span>
-          <span style={{ fontFamily: work, fontSize: 13, color: C.inkSoft }}>{t.minInvestment}: ₹{p.min} · {p.reg}</span>
+          <span style={{ fontFamily: work, fontSize: 13, color: C.inkSoft }}>{t.minInvestment}: ₹{p.min} · {L(p.reg, p.regHi)}</span>
         </div>
       ))}
     </div>
@@ -48,7 +48,7 @@ export function InvestListScreen() {
 
 export function InvestDetailScreen() {
   const { s, actions, derived } = useAppStore();
-  const { t, selectedProduct } = derived;
+  const { t, L, selectedProduct } = derived;
   if (s.investConfirmed) {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20, padding: '20px 20px 24px 20px' }}>
@@ -57,7 +57,9 @@ export function InvestDetailScreen() {
             <IconCheck color={C.greenDark} size={26} />
           </div>
           <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 19, color: C.ink }}>{t.investmentConfirmed}</span>
-          <span style={{ fontFamily: work, fontSize: 14, color: C.inkSoft, textAlign: 'center' }}>₹{s.investAmount} {t.investedIn} {selectedProduct.name}.</span>
+          <span style={{ fontFamily: work, fontSize: 14, color: C.inkSoft, textAlign: 'center' }}>{s.lang === 'hi'
+            ? `₹${s.investAmount} ${L(selectedProduct.name, selectedProduct.nameHi)} ${t.investedIn}।`
+            : `₹${s.investAmount} ${t.investedIn} ${L(selectedProduct.name, selectedProduct.nameHi)}.`}</span>
           <button onClick={() => actions.onOpenTab('dashboard')} style={primaryButtonStyle}>{t.goToDashboard}</button>
         </div>
       </div>
@@ -68,10 +70,10 @@ export function InvestDetailScreen() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20, padding: '20px 20px 24px 20px' }}>
       <div style={{ ...cardStyle, padding: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 19, color: C.ink }}>{selectedProduct.name}</span>
-        <span style={{ fontFamily: work, fontSize: 13, color: C.inkSoft }}>{selectedProduct.reg}</span>
+        <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 19, color: C.ink }}>{L(selectedProduct.name, selectedProduct.nameHi)}</span>
+        <span style={{ fontFamily: work, fontSize: 13, color: C.inkSoft }}>{L(selectedProduct.reg, selectedProduct.regHi)}</span>
         <div style={{ display: 'inline-block', width: 'fit-content', marginTop: 8, background: C.greenBg, borderRadius: 9999, padding: '4px 12px' }}>
-          <span style={{ fontFamily: work, fontWeight: 700, fontSize: 13, color: C.greenDark }}>{selectedProduct.withdrawBadge}</span>
+          <span style={{ fontFamily: work, fontWeight: 700, fontSize: 13, color: C.greenDark }}>{L(selectedProduct.withdrawBadge, selectedProduct.withdrawBadgeHi)}</span>
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

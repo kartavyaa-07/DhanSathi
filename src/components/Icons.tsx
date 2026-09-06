@@ -145,3 +145,122 @@ export const IconOther = () => (
 export const INCOME_ICONS: Record<string, React.FC> = {
   delivery: IconDelivery, domestic: IconDomestic, office: IconOffice, business: IconBusiness, freelance: IconFreelance, other: IconOther,
 };
+
+// ---- Financial tracker icons ---------------------------------------------
+type CatIconProps = { color?: string; size?: number };
+
+export const IconFood = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M6 3v7a2.5 2.5 0 0 0 5 0V3M8.5 10v11" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M17.5 3c-1.4 1.6-2 3.4-2 5.5s.7 3.5 2 4.5V21" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+export const IconRent = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M4 11l8-7 8 7" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M6 10v9h12v-9" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M10 19v-5h4v5" stroke={color} strokeWidth="1.8" />
+  </svg>
+);
+export const IconFuel = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M5 20V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v15M4 20h10" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M6 9h6" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M16 7l2.5 2.5V16a1.8 1.8 0 0 0 3.5 0v-6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+export const IconMedical = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <rect x="3" y="7" width="18" height="12" rx="2.5" stroke={color} strokeWidth="1.8" />
+    <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" stroke={color} strokeWidth="1.8" />
+    <path d="M12 10.5v5M9.5 13h5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+export const IconEducation = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M2.5 9L12 5l9.5 4L12 13 2.5 9z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M6.5 10.8V16c0 1.2 2.5 2.6 5.5 2.6s5.5-1.4 5.5-2.6v-5.2" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+export const IconSalary = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <rect x="2.5" y="6" width="19" height="12" rx="2" stroke={color} strokeWidth="1.8" />
+    <circle cx="12" cy="12" r="2.6" stroke={color} strokeWidth="1.8" />
+    <path d="M6 9.5v5M18 9.5v5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+export const IconGift = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <rect x="3" y="9" width="18" height="11" rx="1.8" stroke={color} strokeWidth="1.8" />
+    <path d="M2.5 9h19M12 9v11" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M12 9S10.5 4 8 4a2 2 0 0 0 0 5m4 0s1.5-5 4-5a2 2 0 0 1 0 5" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+  </svg>
+);
+export const IconRefund = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M4 12a8 8 0 1 1 2.4 5.7" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M4 6.5V12h5.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+export const IconBank = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M3 9.5L12 4l9 5.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5.5 10v7M10 10v7M14 10v7M18.5 10v7M3 20h18" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+export const IconTrend = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M3 17l5.5-5.5 3.5 3.5L21 6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M15 6h6v6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+export const IconChevron = ({ color = '#76777D', size = 18 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
+    <path d="M8 5l5 5-5 5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+export const IconPlusCircle = ({ color = '#191B1E', size = 18 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.8" />
+    <path d="M12 8.5v7M8.5 12h7" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+export const IconBackspace = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M8 5h11a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-6-7 6-7z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M11 9.5l5 5M16 9.5l-5 5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+export const IconShop = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M3 9l1-5h16l1 5" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M4 9v10h16V9" stroke={color} strokeWidth="1.8" />
+    <path d="M10 19v-5h4v5" stroke={color} strokeWidth="1.8" />
+  </svg>
+);
+export const IconGig = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <circle cx="6" cy="18" r="2.2" stroke={color} strokeWidth="1.8" />
+    <circle cx="17" cy="18" r="2.2" stroke={color} strokeWidth="1.8" />
+    <path d="M6 18h4l2-6h4l2 3M12 12V8h3" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+export const IconDots = ({ color = '#191B1E', size = 22 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.8" />
+    <path d="M8 9h8M8 13h8M8 17h5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+export const TRACKER_ICONS: Record<string, React.FC<CatIconProps>> = {
+  food: IconFood, rent: IconRent, fuel: IconFuel, medical: IconMedical, education: IconEducation,
+  salary: IconSalary, business: IconShop, gig: IconGig, gift: IconGift, refund: IconRefund, other: IconDots,
+};
+
+export const IconEdit = ({ color = '#191B1E', size = 18 }: CatIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M4 20l1-4L16 5l3 3-11 11-4 1z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M14 7l3 3" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);

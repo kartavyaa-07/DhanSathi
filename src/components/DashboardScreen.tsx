@@ -1,17 +1,17 @@
 import React from 'react';
 import { useAppStore } from '../store';
 import { C, jakarta, work, pillLabelStyle, cardStyle } from '../ui';
-import { IconSearch, IconShield, IconWallet, IconExchange } from './Icons';
+import { IconSearch, IconShield, IconWallet, IconExchange, IconPlusCircle } from './Icons';
 
 export function DashboardScreen() {
   const { s, actions, derived } = useAppStore();
-  const { t, dashboardSchemes, fmt } = derived;
-  const healthScore = 75;
+  const { t, L, dashboardSchemes, fmt } = derived;
+  const { healthScore } = derived;
   const healthConic = `conic-gradient(${C.green} 0% ${healthScore}%, ${C.border} ${healthScore}% 100%)`;
   const quickActions = [
-    { key: 'insurance', label: 'Insurance', Icon: IconShield },
-    { key: 'invest', label: 'Invest', Icon: IconWallet },
-    { key: 'borrow', label: 'Borrow', Icon: IconExchange },
+    { key: 'insurance', label: t.quickInsurance, Icon: IconShield },
+    { key: 'invest', label: t.quickInvest, Icon: IconWallet },
+    { key: 'borrow', label: t.quickBorrow, Icon: IconExchange },
   ];
 
   return (
@@ -29,8 +29,8 @@ export function DashboardScreen() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontFamily: work, fontWeight: 600, fontSize: 17, color: C.ink }}>{t.healthScoreTitle}</span>
-          <span style={{ fontFamily: work, fontWeight: 600, fontSize: 14, color: C.green }}>{t.goodStanding}</span>
-          <span style={{ fontFamily: work, fontSize: 13, color: C.inkSoft }}>{t.healthScoreNote}</span>
+          <span style={{ fontFamily: work, fontWeight: 600, fontSize: 14, color: C.green }}>{derived.healthStanding}</span>
+          <span style={{ fontFamily: work, fontSize: 13, color: C.inkSoft }}>{derived.healthNote}</span>
         </div>
       </div>
 
@@ -45,7 +45,7 @@ export function DashboardScreen() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontFamily: work, fontSize: 12, color: C.sidebarInk }}>{t.income}</span>
-              <span style={{ fontFamily: work, fontWeight: 600, fontSize: 16, color: '#fff' }}>₹ {fmt(s.monthlyIncome)}</span>
+              <span style={{ fontFamily: work, fontWeight: 600, fontSize: 16, color: '#fff' }}>₹ {fmt(derived.monthlyIncome)}</span>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -54,10 +54,16 @@ export function DashboardScreen() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontFamily: work, fontSize: 12, color: C.sidebarInk }}>{t.expenses}</span>
-              <span style={{ fontFamily: work, fontWeight: 600, fontSize: 16, color: '#fff' }}>₹ {fmt(s.monthlyExpenses)}</span>
+              <span style={{ fontFamily: work, fontWeight: 600, fontSize: 16, color: '#fff' }}>₹ {fmt(derived.monthlyExpenses)}</span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* One tap from the balance to logging against it, in either direction. */}
+      <div style={{ display: 'flex', gap: 12, marginTop: -8 }}>
+        <LogEntryButton label={t.addIncomeCta} onClick={() => actions.onOpenTracker('income')} />
+        <LogEntryButton label={t.addExpenseCta} onClick={() => actions.onOpenTracker('expense')} />
       </div>
 
       {s.investedAmount > 0 && (
@@ -83,14 +89,23 @@ export function DashboardScreen() {
         <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 20, color: C.ink }}>{t.recommendedForYou}</span>
         {dashboardSchemes.map(sc => (
           <button key={sc.id} onClick={() => actions.onOpenSchemeDetail(sc.id)} style={{ ...cardStyle, textAlign: 'left', padding: 16, display: 'flex', flexDirection: 'column', gap: 8, cursor: 'pointer' }}>
-            <span style={pillLabelStyle}>{sc.category}</span>
-            <span style={{ fontFamily: work, fontWeight: 600, fontSize: 16, color: C.ink }}>{sc.nameEn}</span>
-            <span style={{ fontFamily: work, fontSize: 14, color: C.inkSoft }}>{sc.coverEn}</span>
-            <span style={{ fontFamily: work, fontWeight: 700, fontSize: 14, color: C.green }}>{sc.premiumEn}</span>
+            <span style={pillLabelStyle}>{L(sc.category, sc.categoryHi)}</span>
+            <span style={{ fontFamily: work, fontWeight: 600, fontSize: 16, color: C.ink }}>{L(sc.nameEn, sc.nameHi)}</span>
+            <span style={{ fontFamily: work, fontSize: 14, color: C.inkSoft }}>{L(sc.coverEn, sc.coverHi)}</span>
+            <span style={{ fontFamily: work, fontWeight: 700, fontSize: 14, color: C.green }}>{L(sc.premiumEn, sc.premiumHi)}</span>
           </button>
         ))}
       </div>
-      <span style={{ fontFamily: work, fontSize: 12, color: '#9A9BA1' }}>{t.lastUpdated} just now</span>
+      <span style={{ fontFamily: work, fontSize: 12, color: '#9A9BA1' }}>{t.lastUpdated} {t.justNow}</span>
     </div>
+  );
+}
+
+function LogEntryButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={{ flex: 1, height: 50, borderRadius: 12, border: `1px solid ${C.borderStrong}`, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}>
+      <IconPlusCircle color={C.green} size={18} />
+      <span style={{ fontFamily: work, fontWeight: 600, fontSize: 14, color: C.ink }}>{label}</span>
+    </button>
   );
 }

@@ -19,7 +19,7 @@ export function VaaniScreen() {
         <button onClick={actions.onCloseVaani} style={{ width: 40, height: 40, borderRadius: 9999, border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
           <IconBack />
         </button>
-        <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 18, color: C.ink, flex: 1 }}>Vaani</span>
+        <span style={{ fontFamily: jakarta, fontWeight: 700, fontSize: 18, color: C.ink, flex: 1 }}>{t.vaaniName}</span>
       </div>
 
       <div style={{ padding: '8px 20px 12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -32,11 +32,11 @@ export function VaaniScreen() {
           </div>
         </div>
         <span style={{ fontFamily: work, fontSize: 14, color: C.inkSoft }}>
-          {s.vaaniListening ? 'Listening…' : s.vaaniLoading ? 'Thinking…' : 'Tap mic or type to talk'}
+          {s.vaaniListening ? t.listening : s.vaaniLoading ? t.thinkingShort : t.tapMicOrType}
         </span>
         {!hasApiKey() && isChat && (
           <span style={{ fontFamily: work, fontSize: 12, color: C.danger, textAlign: 'center' }}>
-            No Claude API key set — add one in Profile to let Vaani respond.
+            {t.noApiKeyNotice}
           </span>
         )}
       </div>
@@ -73,7 +73,17 @@ export function VaaniScreen() {
                   <IconCheck size={13} />{t.recommendation}
                 </span>
                 <span style={{ fontFamily: work, fontSize: 14, color: C.ink, lineHeight: '20px' }}>{s.vaaniRecommendation.summary}</span>
+                <ProviderCredit rec={s.vaaniRecommendation} t={t} />
                 <button onClick={actions.onGoToRecommendation} style={primaryButtonStyle}>{s.vaaniRecommendation.ctaLabel}</button>
+                {s.vaaniRecommendation.action === 'explore_scheme' && (
+                  <button
+                    onClick={actions.onAskVaaniToRegister}
+                    disabled={s.vaaniLoading}
+                    style={{ height: 48, borderRadius: 12, border: `1px solid ${C.green}`, background: '#fff', color: C.green, fontFamily: work, fontWeight: 700, fontSize: 15, cursor: s.vaaniLoading ? 'default' : 'pointer', width: '100%' }}
+                  >
+                    {t.helpMeRegister}
+                  </button>
+                )}
               </div>
             )}
           </>
@@ -89,7 +99,7 @@ export function VaaniScreen() {
               <div style={{ borderRadius: 12, background: '#fff', border: `1px solid ${C.border}`, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <Row label={t.name} value={s.profileName} />
                 <Row label={t.incomeType} value={derived.selectedIncomeTypeLabel} />
-                <Row label={t.monthlyIncomeLabel} value={`₹ ${derived.fmt(s.monthlyIncome)}`} />
+                <Row label={t.monthlyIncomeLabel} value={`₹ ${derived.fmt(derived.monthlyIncome)}`} />
               </div>
             )}
             {s.enrollStep === 2 && (
@@ -97,7 +107,7 @@ export function VaaniScreen() {
                 <div style={{ width: 36, height: 36, borderRadius: 9999, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 8h20L12 2z" fill={C.greenDark} /><path d="M4 10v8h2v-8H4zm5 0v8h2v-8H9zm5 0v8h2v-8h-2zm5 0v8h2v-8h-2zM2 20h20v2H2v-2z" fill={C.greenDark} /></svg>
                 </div>
-                <span style={{ fontFamily: work, fontWeight: 600, fontSize: 14, color: C.ink }}>{s.aaLinked ? 'Linked Bank ••••1234' : 'HDFC Bank ••••1234'}</span>
+                <span style={{ fontFamily: work, fontWeight: 600, fontSize: 14, color: C.ink }}>{s.aaLinked ? t.linkedBankMasked : 'HDFC Bank ••••1234'}</span>
               </div>
             )}
             {s.enrollStep === 3 && (
@@ -112,7 +122,7 @@ export function VaaniScreen() {
       {isEnroll && (
         <div style={{ padding: '12px 20px 20px 20px' }}>
           <button onClick={actions.onEnrollContinue} disabled={s.enrollStep === 3} style={{ ...primaryButtonStyle, opacity: s.enrollStep === 3 ? 0.6 : 1 }}>
-            {s.enrollStep < 2 ? t.continue : 'Submit Enrollment'}
+            {s.enrollStep < 2 ? t.continue : t.submitEnrollment}
           </button>
         </div>
       )}
@@ -132,6 +142,22 @@ export function VaaniScreen() {
         </div>
       )}
       <span style={{ textAlign: 'center', paddingBottom: 10, fontFamily: work, fontSize: 12, color: C.inkFaint, textDecoration: 'underline' }}>{t.talkToHuman}</span>
+    </div>
+  );
+}
+
+// Attribution block: the scheme belongs to whoever runs it, and the card says
+// so plainly — DhanSathi is the guide, never the provider.
+function ProviderCredit({ rec, t }: { rec: { schemeName: string; provider: string; url: string }; t: any }) {
+  if (!rec.schemeName && !rec.provider) return null;
+  let source = '';
+  try { source = rec.url ? new URL(rec.url).hostname.replace(/^www\./, '') : ''; } catch { source = ''; }
+  return (
+    <div style={{ borderRadius: 10, background: C.bg, border: `1px solid ${C.border}`, padding: 12, display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {!!rec.schemeName && <span style={{ fontFamily: work, fontWeight: 700, fontSize: 14, color: C.ink }}>{rec.schemeName}</span>}
+      {!!rec.provider && <span style={{ fontFamily: work, fontSize: 13, color: C.inkSoft }}>{t.runBy} {rec.provider}</span>}
+      {!!source && <span style={{ fontFamily: work, fontSize: 12, color: C.inkFaint }}>{t.researchedFrom} {source}</span>}
+      <span style={{ fontFamily: work, fontSize: 12, color: C.inkFaint, lineHeight: '17px', marginTop: 3 }}>{t.notOurScheme}</span>
     </div>
   );
 }
