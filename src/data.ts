@@ -414,9 +414,16 @@ export function importedEntries(now: number): TrackerEntry[] {
     ['expense', 950, 'fuel', 5],
     ['expense', 500, 'medical', 2],
   ];
+  // The tracker card these feed is labelled "This Month", so keep every row
+  // inside the current month: early in the month the offsets are compressed
+  // rather than spilling back into the previous one.
+  const dayOfMonth = new Date(now).getDate();
+  const span = Math.max(dayOfMonth - 1, 0);
+  const maxOffset = Math.max(...rows.map(r => r[3]));
+  const scale = span >= maxOffset ? 1 : span / maxOffset;
   return rows.map(([kind, amount, categoryId, daysAgo], i) => ({
     id: `aa-${i}`, kind, amount, categoryId, customLabel: '',
-    at: now - daysAgo * day, source: 'imported' as const,
+    at: now - Math.round(daysAgo * scale) * day, source: 'imported' as const,
   }));
 }
 

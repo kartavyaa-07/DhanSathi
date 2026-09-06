@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAppStore } from '../store';
 import { C, jakarta, work, devanagari, primaryButtonStyle, mic } from '../ui';
 import { IconBack, IconMic, IconCheck } from './Icons';
@@ -9,6 +9,21 @@ export function VaaniScreen() {
   const { t } = derived;
   const isChat = s.vaaniMode === 'chat';
   const isEnroll = s.vaaniMode === 'enroll';
+
+  // Keep the newest message in view. Without this the reply and the
+  // recommendation card render below the fold and the user has to scroll to
+  // find out that Vaani answered at all.
+  //
+  // The feed declares overflow-y: auto but its height is unconstrained, so the
+  // element that actually scrolls is an ancestor (the phone shell). Walk up to
+  // whichever one that is and pin it to the bottom — scrollIntoView on a
+  // sentinel stops short, leaving the composer below the fold.
+  const feedEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let node: HTMLElement | null = feedEndRef.current;
+    while (node && node.scrollHeight <= node.clientHeight + 1) node = node.parentElement;
+    node?.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
+  }, [s.vaaniMessages.length, s.vaaniLoading, s.vaaniRecommendation, s.enrollStep]);
 
   const enrollHi = derived.enrollStepContent.hi;
   const enrollEn = derived.enrollStepContent.en;
@@ -41,7 +56,7 @@ export function VaaniScreen() {
         )}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, padding: '12px 20px 20px 20px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, padding: '12px 20px 20px 20px', scrollBehavior: 'smooth' }}>
         {isChat && (
           <>
             {s.vaaniMessages.map((m, i) => {
@@ -117,6 +132,7 @@ export function VaaniScreen() {
             )}
           </>
         )}
+        <div ref={feedEndRef} />
       </div>
 
       {isEnroll && (

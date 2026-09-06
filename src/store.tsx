@@ -157,8 +157,12 @@ function riskTierLabel(tier: AppState['riskTier'], t: typeof EN): string {
   return '—';
 }
 
-function profileDraftValid(d: ProfileDraft): boolean {
-  return !!(d.name.trim() && d.dob && d.gender && d.area.trim() && d.incomeTypeId && parseInt(d.income, 10) > 0);
+function profileDraftValid(d: ProfileDraft, ledgerIncome: number): boolean {
+  const typed = d.income.trim();
+  // A stated income is only required when the ledger has none of its own —
+  // a bank-linked user legitimately leaves this blank.
+  const incomeOk = typed ? parseInt(typed, 10) > 0 : ledgerIncome > 0;
+  return !!(d.name.trim() && d.dob && d.gender && d.area.trim() && d.incomeTypeId && incomeOk);
 }
 
 function trackerEntryValid(s: AppState): boolean {
@@ -284,7 +288,7 @@ export function useAppStoreImpl() {
 
   const onSaveProfileEdits = () => {
     const d = s.profileDraft;
-    if (!d || !profileDraftValid(d)) return;
+    if (!d || !profileDraftValid(d, trackedIncomeTotal)) return;
     patch({
       profileName: d.name.trim(),
       profileDob: d.dob,
@@ -657,7 +661,7 @@ export function useAppStoreImpl() {
       : healthScore >= 25 ? t.healthNoteFair
       : t.healthNoteLow,
     trackerCategoryList: trackerCategories(s.trackerKind),
-    profileDraftValid: s.profileDraft ? profileDraftValid(s.profileDraft) : false,
+    profileDraftValid: s.profileDraft ? profileDraftValid(s.profileDraft, trackedIncomeTotal) : false,
     trackerEntryValid: trackerEntryValid(s),
     trackerAmountDisplay: s.trackerAmount || '0',
     recentEntries: s.trackerEntries.slice(0, 8),
